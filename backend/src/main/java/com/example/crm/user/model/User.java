@@ -1,12 +1,6 @@
 package com.example.crm.user.model;
 
-
-import com.example.crm.account.model.Account;
-import com.example.crm.cases.model.Case;
-import com.example.crm.contact.model.Contact;
-import com.example.crm.customer.model.Customer;
 import com.example.crm.lead.model.Lead;
-import com.example.crm.opportunity.model.Opportunity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -68,21 +62,6 @@ public class User {
 
     @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Lead> leads = new HashSet<>();
-
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Opportunity> opportunities = new HashSet<>();
-
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Customer> customers = new HashSet<>();
-
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Account> accounts = new HashSet<>();
-
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Contact> contacts = new HashSet<>();
-
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Case> cases = new HashSet<>();
 
     public User(String username, String email, String password) {
         this.username = username;

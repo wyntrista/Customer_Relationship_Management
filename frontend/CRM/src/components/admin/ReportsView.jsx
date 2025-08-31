@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import authHeader from "../../services/auth-header";
 
 const ReportsView = () => {
   const [activeReport, setActiveReport] = useState("users");
@@ -6,6 +7,32 @@ const ReportsView = () => {
     startDate: "2025-01-01",
     endDate: "2025-08-02"
   });
+  const [realData, setRealData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  // Load real data from API
+  useEffect(() => {
+    const fetchRealData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:8080/api/reports/stats', {
+          headers: authHeader()
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setRealData(data);
+        } else {
+          console.log('Reports API not available, using mock data');
+        }
+      } catch (error) {
+        console.log('Reports API not available, using mock data:', error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRealData();
+  }, []);
 
   const mockData = {
     userStats: {
@@ -32,6 +59,10 @@ const ReportsView = () => {
     }
   };
 
+  // Use real data if available, fallback to mock data
+  const currentData = realData || mockData;
+  const isUsingRealData = realData !== null;
+
   const handleExportReport = (format) => {
     alert(`Exporting ${activeReport} report as ${format}...`);
     // TODO: Implement actual export functionality
@@ -51,7 +82,7 @@ const ReportsView = () => {
                   Total Users
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.userStats.totalUsers}
+                  {currentData.userStats.totalUsers}
                 </div>
               </div>
             </div>
@@ -63,7 +94,7 @@ const ReportsView = () => {
                   Active Users
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.userStats.activeUsers}
+                  {currentData.userStats.activeUsers}
                 </div>
               </div>
             </div>
@@ -75,7 +106,7 @@ const ReportsView = () => {
                   New This Month
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.userStats.newUsersThisMonth}
+                  {currentData.userStats.newUsersThisMonth}
                 </div>
               </div>
             </div>
@@ -94,7 +125,13 @@ const ReportsView = () => {
           </div>
         </div>
 
-        <h6>Top Active Users</h6>
+        <h6>Top Active Users <small className="text-muted">{isUsingRealData ? '(Dữ liệu thật)' : '(Demo Data)'}</small></h6>
+        {!isUsingRealData && (
+          <div className="alert alert-warning mb-3">
+            <i className="fas fa-exclamation-triangle"></i>
+            <strong>Lưu ý:</strong> Đây là dữ liệu demo. Tính năng thống kê người dùng thật đang trong quá trình phát triển.
+          </div>
+        )}
         <div className="table-responsive">
           <table className="table table-bordered">
             <thead>
@@ -105,9 +142,12 @@ const ReportsView = () => {
               </tr>
             </thead>
             <tbody>
-              {mockData.userStats.topUsers.map((user, index) => (
+              {currentData.userStats.topUsers.map((user, index) => (
                 <tr key={index}>
-                  <td>{user.name}</td>
+                  <td>
+                    {user.name} 
+                    {!isUsingRealData && <span className="badge badge-secondary ml-2">Demo</span>}
+                  </td>
                   <td>{user.loginCount}</td>
                   <td>{user.lastLogin}</td>
                 </tr>
@@ -133,7 +173,7 @@ const ReportsView = () => {
                   Total Logins
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.systemStats.totalLogins.toLocaleString()}
+                  {currentData.systemStats.totalLogins.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -145,7 +185,7 @@ const ReportsView = () => {
                   Failed Logins
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.systemStats.failedLogins}
+                  {currentData.systemStats.failedLogins}
                 </div>
               </div>
             </div>
@@ -157,7 +197,7 @@ const ReportsView = () => {
                   Avg Session Time
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.systemStats.avgSessionTime}
+                  {currentData.systemStats.avgSessionTime}
                 </div>
               </div>
             </div>
@@ -169,7 +209,7 @@ const ReportsView = () => {
                   Peak Usage
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.systemStats.peakUsageHour}
+                  {currentData.systemStats.peakUsageHour}
                 </div>
               </div>
             </div>
@@ -203,7 +243,7 @@ const ReportsView = () => {
                   Total Revenue
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  ${mockData.salesStats.totalRevenue.toLocaleString()}
+                  ${currentData.salesStats.totalRevenue.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -215,7 +255,7 @@ const ReportsView = () => {
                   Total Deals
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.salesStats.totalDeals}
+                  {currentData.salesStats.totalDeals}
                 </div>
               </div>
             </div>
@@ -227,7 +267,7 @@ const ReportsView = () => {
                   Avg Deal Size
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  ${mockData.salesStats.avgDealSize}
+                  ${currentData.salesStats.avgDealSize}
                 </div>
               </div>
             </div>
@@ -239,7 +279,7 @@ const ReportsView = () => {
                   Conversion Rate
                 </div>
                 <div className="h5 mb-0 font-weight-bold text-gray-800">
-                  {mockData.salesStats.conversionRate}%
+                  {currentData.salesStats.conversionRate}%
                 </div>
               </div>
             </div>
@@ -272,6 +312,25 @@ const ReportsView = () => {
 
   return (
     <div>
+      {/* Data Status Warning */}
+      <div className={`alert ${isUsingRealData ? 'alert-success' : 'alert-info'} mb-4`}>
+        <div className="d-flex align-items-center">
+          <i className={`fas ${isUsingRealData ? 'fa-check-circle' : 'fa-info-circle'} fa-2x mr-3`}></i>
+          <div>
+            <h5 className="alert-heading mb-1">
+              {isUsingRealData ? 'Dữ liệu thật' : 'Tính năng đang phát triển'}
+            </h5>
+            <p className="mb-0">
+              {isUsingRealData 
+                ? <><strong>Tuyệt vời!</strong> Trang báo cáo đang hiển thị dữ liệu thực tế từ hệ thống.</>
+                : <><strong>Lưu ý:</strong> Trang báo cáo hiện đang hiển thị dữ liệu demo/mẫu. 
+                   Các báo cáo thật sẽ được tích hợp với dữ liệu thực tế từ hệ thống trong phiên bản tiếp theo.</>
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="row mb-4">
         <div className="col-12 d-flex justify-content-between align-items-center">

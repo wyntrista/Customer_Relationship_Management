@@ -9,9 +9,12 @@ import com.example.crm.user.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -24,6 +27,9 @@ public class AdminController {
     
     @Autowired
     private RoleRepository roleRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Lấy danh sách tất cả users (chỉ admin)
@@ -46,6 +52,62 @@ public class AdminController {
             .collect(Collectors.toList());
         
         return ResponseEntity.ok(userDTOs);
+    }
+
+    /**
+     * Tạo user mới (chỉ admin)
+     */
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request) {
+        // Kiểm tra username đã tồn tại
+        if (userRepository.existsByUsername(request.getUsername())) {
+            return ResponseEntity.badRequest()
+                .body(new MessageResponse("Error: Username is already taken!"));
+        }
+
+        // Kiểm tra email đã tồn tại
+        if (userRepository.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest()
+                .body(new MessageResponse("Error: Email is already in use!"));
+        }
+
+        // Tạo user mới
+        User user = new User(request.getUsername(), request.getEmail(), 
+                           passwordEncoder.encode(request.getPassword()));
+        user.setFullName(request.getFullName());
+        user.setEnabled(true);
+
+        // Set role
+        Set<Role> roles = new HashSet<>();
+        Role userRole = roleRepository.findByName(ERole.valueOf(request.getRole()))
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+        roles.add(userRole);
+        user.setRoles(roles);
+
+        // Set permission level based on role
+        switch (request.getRole()) {
+            case "ROLE_ADMIN":
+                user.setPermissionLevel(8);
+                break;
+            case "ROLE_MARKETING":
+                user.setPermissionLevel(4);
+                break;
+            case "ROLE_SALES":
+                user.setPermissionLevel(2);
+                break;
+            case "ROLE_TELESALES":
+                user.setPermissionLevel(1);
+                break;
+            case "ROLE_USER":
+            default:
+                user.setPermissionLevel(0);
+                break;
+        }
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(new MessageResponse("User created successfully!"));
     }
 
     /**
@@ -182,6 +244,29 @@ public class AdminController {
 
     public static class UpdatePermissionRequest {
         private String role;
+
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
+    }
+
+    public static class CreateUserRequest {
+        private String username;
+        private String email;
+        private String password;
+        private String fullName;
+        private String role;
+
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+
+        public String getFullName() { return fullName; }
+        public void setFullName(String fullName) { this.fullName = fullName; }
 
         public String getRole() { return role; }
         public void setRole(String role) { this.role = role; }

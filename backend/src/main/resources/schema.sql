@@ -69,3 +69,18 @@ CREATE INDEX IF NOT EXISTS idx_leads_assigned_user ON leads(assigned_user_id);
 CREATE INDEX IF NOT EXISTS idx_leads_creator ON leads(creator_id);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at);
 CREATE INDEX IF NOT EXISTS idx_lead_status_history_lead_id ON lead_status_history(lead_id);
+
+-- Create verification_codes table
+CREATE TABLE IF NOT EXISTS verification_codes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(10) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    type VARCHAR(50) NOT NULL DEFAULT 'PASSWORD_RESET'
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_type ON verification_codes(type);

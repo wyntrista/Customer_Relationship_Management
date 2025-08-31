@@ -1,5 +1,6 @@
 package com.example.crm.lead.service;
 
+import com.example.crm.common.dto.PageResponse;
 import com.example.crm.lead.dto.CreateLeadRequest;
 import com.example.crm.lead.dto.LeadResponse;
 import com.example.crm.lead.dto.LeadStatusHistoryResponse;
@@ -13,11 +14,18 @@ import com.example.crm.lead.repository.LeadStatusHistoryRepository;
 import com.example.crm.user.model.User;
 import com.example.crm.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -489,8 +497,139 @@ public class LeadServiceImpl implements LeadService {
         }
         
         // Không load status history để tăng performance
-        response.setStatusHistory(new ArrayList<>());
+        
+        return response;
+    }
+    
+    // Pagination methods
+    @Override
+    @Cacheable(value = "leadPages", key = "#page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
+    public PageResponse<LeadResponse> getAllLeadsPaginated(int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<Lead> leadPage = leadRepository.findAll(pageable);
+        
+        List<LeadResponse> leadResponses = leadPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        return PageResponse.of(leadResponses, page, size, leadPage.getTotalElements());
+    }
+    
+    @Override
+    @Cacheable(value = "leadPagesByStatus", key = "#status + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
+    public PageResponse<LeadResponse> getLeadsByStatusPaginated(LeadStatus status, int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<Lead> leadPage = leadRepository.findByStatus(status, pageable);
+        
+        List<LeadResponse> leadResponses = leadPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        return PageResponse.of(leadResponses, page, size, leadPage.getTotalElements());
+    }
+    
+    @Override
+    @Cacheable(value = "leadPagesByUser", key = "#userId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
+    public PageResponse<LeadResponse> getLeadsByAssignedUserPaginated(Long userId, int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<Lead> leadPage = leadRepository.findByAssignedUserId(userId, pageable);
+        
+        List<LeadResponse> leadResponses = leadPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        return PageResponse.of(leadResponses, page, size, leadPage.getTotalElements());
+    }
+    
+    @Override
+    @Cacheable(value = "leadPagesSearch", key = "#keyword + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDirection")
+    public PageResponse<LeadResponse> searchLeadsPaginated(String keyword, int page, int size, String sortBy, String sortDirection) {
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        
+        Page<Lead> leadPage = leadRepository.findByFullNameContainingIgnoreCaseOrPhoneContainingOrEmailContainingIgnoreCase(keyword, keyword, keyword, pageable);
+        
+        List<LeadResponse> leadResponses = leadPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+        
+        return PageResponse.of(leadResponses, page, size, leadPage.getTotalElements());
+    }
 
+    @Override
+    public PageResponse<LeadResponse> getLeadsWithFiltersPaginated(int page, int size, String sortBy, String sortDirection,
+                                                                  String search, String fullName, String phone, String email, String company,
+                                                                  VietnamProvince province, String source, LeadStatus status,
+                                                                  Long assignedUserId, Long currentUserId,
+                                                                  LocalDateTime createdDateFrom, LocalDateTime createdDateTo) {
+
+        System.out.println("=== getLeadsWithFiltersPaginated called ===");
+        System.out.println("Parameters: page=" + page + ", size=" + size + ", sortBy=" + sortBy + ", sortDirection=" + sortDirection);
+        System.out.println("Filters: search=" + search + ", fullName=" + fullName + ", phone=" + phone + ", email=" + email + ", company=" + company);
+        System.out.println("Province=" + province + ", source=" + source + ", status=" + status + ", assignedUserId=" + assignedUserId);
+        
+        // Debug province enum
+        if (province != null) {
+            System.out.println("Province enum: name=" + province.name() + ", displayName=" + province.getDisplayName() + ", toString=" + province.toString());
+        }
+
+        Sort.Direction direction = sortDirection.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        // If search is provided, use search method instead of filters
+        if (search != null && !search.trim().isEmpty()) {
+            System.out.println("Using search method for query: " + search);
+            return searchLeadsPaginated(search, page, size, sortBy, sortDirection);
+        }
+
+        System.out.println("Using filter method with repository query");
+        
+        // Debug: Check what HA_NOI leads exist in database
+        if (province != null && province == VietnamProvince.HA_NOI) {
+            long hanoiCount = leadRepository.count();
+            System.out.println("Total leads in database: " + hanoiCount);
+            
+            List<Lead> hanoiLeads = leadRepository.findByProvince(VietnamProvince.HA_NOI);
+            System.out.println("Leads with HA_NOI province: " + hanoiLeads.size());
+            
+            // Show what provinces actually exist
+            Page<Lead> allLeads = leadRepository.findAll(PageRequest.of(0, 143)); // Get all leads
+            Map<VietnamProvince, Long> provinceCount = allLeads.getContent().stream()
+                .collect(Collectors.groupingBy(Lead::getProvince, Collectors.counting()));
+            System.out.println("Province distribution:");
+            provinceCount.forEach((p, count) -> System.out.println("  " + p + ": " + count + " leads"));
+        }
+        
+        // Use the repository method with filters - for testing, try getAllLeadsPaginated first
+        
+        // Debug: try without filters first
+        if (fullName == null && phone == null && email == null && company == null && 
+            province == null && source == null && status == null && assignedUserId == null && 
+            createdDateFrom == null && createdDateTo == null) {
+            System.out.println("No filters provided, using getAllLeadsPaginated");
+            return getAllLeadsPaginated(page, size, sortBy, sortDirection);
+        }
+        
+        Page<Lead> leadPage = leadRepository.findLeadsWithFilters(
+            fullName, province, phone, email, company, source, status, assignedUserId, null, createdDateFrom, createdDateTo, pageable);
+
+        System.out.println("Repository returned: totalElements=" + leadPage.getTotalElements() + ", content size=" + leadPage.getContent().size());
+
+        List<LeadResponse> leadResponses = leadPage.getContent().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+
+        System.out.println("Converted to " + leadResponses.size() + " responses");
+
+        PageResponse<LeadResponse> response = PageResponse.of(leadResponses, page, size, leadPage.getTotalElements());
+        System.out.println("Final response: page=" + response.getNumber() + ", size=" + response.getSize() + ", totalElements=" + response.getTotalElements());
+        
         return response;
     }
 }

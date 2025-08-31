@@ -95,6 +95,41 @@ class AuthService {
     });
   }
 
+  // Get the current user's token
+  getToken() {
+    const user = this.getCurrentUser();
+    console.log('getToken - current user:', user);
+    if (user) {
+      const token = user.accessToken || user.token;
+      console.log('getToken - token found:', token ? 'yes' : 'no');
+      
+      // Check if token is expired
+      if (token && this.isTokenExpired(token)) {
+        console.log('Token is expired, logging out...');
+        this.logout();
+        return null;
+      }
+      
+      return token;
+    }
+    console.log('getToken - no user found');
+    return null;
+  }
+  
+  // Check if JWT token is expired
+  isTokenExpired(token) {
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error parsing token:', error);
+      return true;
+    }
+  }
+
   // Verify token with backend (optional)
   verifyToken() {
     const user = this.getCurrentUser();

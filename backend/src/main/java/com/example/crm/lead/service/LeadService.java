@@ -1,10 +1,10 @@
 package com.example.crm.lead.service;
 
+import com.example.crm.common.dto.PageResponse;
 import com.example.crm.lead.dto.CreateLeadRequest;
 import com.example.crm.lead.dto.LeadResponse;
 import com.example.crm.lead.dto.LeadStatusHistoryResponse;
 import com.example.crm.lead.dto.UpdateLeadRequest;
-import com.example.crm.lead.model.Lead;
 import com.example.crm.lead.model.LeadStatus;
 import com.example.crm.lead.model.VietnamProvince;
 
@@ -27,6 +27,17 @@ public interface LeadService {
     List<LeadResponse> getLeadsByAssignedUser(Long userId);
     List<LeadResponse> getLeadsByCreator(Long creatorId);
     List<LeadResponse> getLeadsByStatus(LeadStatus status);
+    
+    // Pagination operations
+    PageResponse<LeadResponse> getAllLeadsPaginated(int page, int size, String sortBy, String sortDirection);
+    PageResponse<LeadResponse> getLeadsByStatusPaginated(LeadStatus status, int page, int size, String sortBy, String sortDirection);
+    PageResponse<LeadResponse> getLeadsByAssignedUserPaginated(Long userId, int page, int size, String sortBy, String sortDirection);
+    PageResponse<LeadResponse> searchLeadsPaginated(String keyword, int page, int size, String sortBy, String sortDirection);
+    PageResponse<LeadResponse> getLeadsWithFiltersPaginated(int page, int size, String sortBy, String sortDirection,
+                                                            String search, String fullName, String phone, String email, String company,
+                                                            VietnamProvince province, String source, LeadStatus status,
+                                                            Long assignedUserId, Long currentUserId,
+                                                            LocalDateTime createdDateFrom, LocalDateTime createdDateTo);
     
     // Filter operations
     List<LeadResponse> filterLeads(String customerName, VietnamProvince area, String phone, 

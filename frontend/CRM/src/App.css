@@ -50,6 +50,15 @@
   padding: 2em;
 }
 
+/* Navbar logo styling */
+.navbar-logo {
+  height: 40px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
 .read-the-docs {
   color: #888;
 }

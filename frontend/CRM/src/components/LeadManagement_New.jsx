@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SearchableSelect from './SearchableSelect';
+import LeadDetailModal from './LeadDetailModal';
 import { Refresh } from '@mui/icons-material';
 import './LeadManagement_New.css';
 
@@ -81,6 +82,10 @@ const LeadManagement = () => {
     { value: 'EVENT', label: 'Sự kiện' },
     { value: 'OTHER', label: 'Khác' }
   ];
+
+  useEffect(() => {
+    console.log('selectedLead state changed:', selectedLead);
+  }, [selectedLead]);
 
   useEffect(() => {
     fetchLeads();
@@ -173,20 +178,41 @@ const LeadManagement = () => {
     }
   };
 
+  // Handle row click to show lead details
+  const handleRowClick = (lead, event) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const debugMsg = `[${timestamp}] Row clicked for lead: ${lead.id} - ${lead.fullName}`;
+    console.log(debugMsg);
+    setDebugInfo(debugMsg);
+    
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      console.log('Event prevented and stopped');
+    }
+    
+    console.log('Setting selectedLead to:', lead);
+    setSelectedLead(lead); // Set immediately with basic data
+    fetchLeadDetails(lead.id); // Then fetch detailed data
+  };
+
   const fetchLeadDetails = async (leadId) => {
+    console.log('Fetching lead details for ID:', leadId);
     try {
       const token = JSON.parse(localStorage.getItem('user'))?.token;
       const response = await axios.get(`http://localhost:8080/api/leads/${leadId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSelectedLead(response.data);
+      console.log('Lead details fetched successfully:', response.data);
+      // Update the selectedLead with detailed data
+      setSelectedLead(prevLead => ({
+        ...prevLead,
+        ...response.data
+      }));
     } catch (error) {
       console.error('Error fetching lead details:', error);
-      // Fallback to basic lead data if API fails
-      const basicLead = leads.find(lead => lead.id === leadId);
-      if (basicLead) {
-        setSelectedLead(basicLead);
-      }
+      // If API fails, keep the basic lead data that was already set
+      console.log('Keeping basic lead data due to API error');
     }
   };
 
@@ -478,6 +504,22 @@ const LeadManagement = () => {
           <i className="fas fa-plus me-2"></i>
           Thêm Lead
         </button>
+        
+        {/* Test button for modal - Remove in production */}
+        {filteredLeads.length > 0 && (
+          <button 
+            type="button" 
+            className="btn btn-info btn-sm ms-2"
+            onClick={() => {
+              console.log('Test button - Opening modal');
+              setSelectedLead(filteredLeads[0]);
+            }}
+            title="Test modal functionality"
+          >
+            <i className="fas fa-eye me-2"></i>
+            Test Modal
+          </button>
+        )}
       </div>
 
       {/* Lead Count Badge */}
@@ -818,7 +860,10 @@ const LeadManagement = () => {
                 <tr 
                   key={lead.id} 
                   className="clickable-row"
-                  onClick={() => fetchLeadDetails(lead.id)}
+                  onClick={() => {
+                    console.log('Row clicked - Opening modal for lead:', lead.fullName);
+                    setSelectedLead(lead);
+                  }}
                   style={{ cursor: 'pointer' }}
                   title="Nhấn để xem chi tiết"
                 >
@@ -862,143 +907,19 @@ const LeadManagement = () => {
         </table>
       </div>
 
-      {/* Lead Detail Modal */}
-      {selectedLead && (
-        <div className="modal show d-block" tabIndex="-1">
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Chi tiết Lead</h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setSelectedLead(null)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <div className="row">
-                  <div className="col-md-6">
-                    <p><strong>Tên khách hàng:</strong> {selectedLead.fullName}</p>
-                    <p><strong>Số điện thoại:</strong> {selectedLead.phone}</p>
-                    <p><strong>Email:</strong> {selectedLead.email || 'Chưa có'}</p>
-                    <p><strong>Công ty:</strong> {selectedLead.company || 'Khách hàng cá nhân'}</p>
-                    <p><strong>Tỉnh/Thành phố:</strong> {getProvinceLabel(selectedLead.province)}</p>
-                  </div>
-                  <div className="col-md-6">
-                    <p><strong>Nguồn lead:</strong> {getSourceLabel(selectedLead.source)}</p>
-                    <p><strong>Trạng thái:</strong> 
-                      <span className={`badge ${getStatusBadgeClass(selectedLead.status)} ms-2`}>
-                        {getStatusLabel(selectedLead.status)}
-                      </span>
-                    </p>
-                    <p><strong>Người phụ trách:</strong> {getAssignedUserLabel(selectedLead.assignedUserId)}</p>
-                    <p><strong>Người tạo:</strong> 
-                      <i className="fas fa-user-plus me-1 text-success"></i>
-                      {selectedLead.creatorFullName || selectedLead.creatorUsername || 'Không xác định'}
-                      {selectedLead.creatorEmail && (
-                        <small className="text-muted ms-2">({selectedLead.creatorEmail})</small>
-                      )}
-                    </p>
-                    <p><strong>Ngày tạo:</strong> {formatDate(selectedLead.createdAt)}</p>
-                    <p><strong>Cập nhật lần cuối:</strong> {formatDate(selectedLead.updatedAt)}</p>
-                  </div>
-                </div>
-                {selectedLead.notes && (
-                  <div className="row mb-3">
-                    <div className="col-12">
-                      <p><strong>Ghi chú:</strong></p>
-                      <div className="p-3 bg-light rounded">
-                        {selectedLead.notes}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Lịch sử trạng thái */}
-                <div className="row">
-                  <div className="col-12">
-                    <p><strong><i className="fas fa-history me-1"></i>Lịch sử trạng thái:</strong></p>
-                    {selectedLead.statusHistory && selectedLead.statusHistory.length > 0 ? (
-                      <div className="status-history" style={{maxHeight: '250px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '0.375rem', padding: '10px', backgroundColor: '#f8f9fa'}}>
-                        {selectedLead.statusHistory.map((history, index) => (
-                          <div key={history.id} className={`d-flex align-items-start mb-3 p-3 rounded ${index === 0 ? 'bg-white border-start border-primary border-3' : 'bg-light'}`}>
-                            <div className="me-3">
-                              <i className="fas fa-circle text-primary" style={{fontSize: '8px', marginTop: '6px'}}></i>
-                            </div>
-                            <div className="flex-grow-1">
-                              <div className="d-flex align-items-center mb-2">
-                                {history.oldStatus && (
-                                  <>
-                                    <span className={`badge ${getStatusBadgeClass(history.oldStatus)} me-2`} style={{fontSize: '0.75rem'}}>
-                                      {getStatusLabel(history.oldStatus)}
-                                    </span>
-                                    <i className="fas fa-arrow-right mx-2 text-muted" style={{fontSize: '0.8rem'}}></i>
-                                  </>
-                                )}
-                                <span className={`badge ${getStatusBadgeClass(history.newStatus)}`} style={{fontSize: '0.75rem'}}>
-                                  {getStatusLabel(history.newStatus)}
-                                </span>
-                                {index === 0 && (
-                                  <span className="badge bg-success ms-2" style={{fontSize: '0.65rem'}}>Mới nhất</span>
-                                )}
-                              </div>
-                              <div className="d-flex align-items-center mb-1">
-                                <i className="fas fa-user me-2 text-primary" style={{fontSize: '0.8rem'}}></i>
-                                <strong className="text-dark" style={{fontSize: '0.9rem'}}>{history.updatedByName}</strong>
-                                <span className="text-muted mx-2">•</span>
-                                <i className="fas fa-clock me-1 text-muted" style={{fontSize: '0.7rem'}}></i>
-                                <small className="text-muted">{formatDate(history.createdAt)}</small>
-                              </div>
-                              {history.notes && (
-                                <div className="mt-2 p-2 bg-info bg-opacity-10 rounded border-start border-info border-3">
-                                  <i className="fas fa-comment me-2 text-info" style={{fontSize: '0.8rem'}}></i>
-                                  <small className="text-dark">{history.notes}</small>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center text-muted p-4" style={{border: '2px dashed #dee2e6', borderRadius: '0.375rem', backgroundColor: '#f8f9fa'}}>
-                        <i className="fas fa-history fa-3x mb-3 text-muted"></i>
-                        <p className="mb-0">Chưa có lịch sử thay đổi trạng thái</p>
-                        <small>Lịch sử sẽ được ghi lại khi bạn cập nhật trạng thái lead</small>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button 
-                  type="button" 
-                  className="btn btn-danger me-auto"
-                  onClick={() => handleDeleteLead(selectedLead)}
-                  title="Xóa lead này"
-                >
-                  <i className="fas fa-trash me-2"></i>
-                  Xóa
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={() => handleEditLead(selectedLead)}
-                >
-                  <i className="fas fa-edit me-2"></i>
-                  Chỉnh sửa
-                </button>
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={() => setSelectedLead(null)}
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Lead Detail Modal - New Component */}
+      <LeadDetailModal
+        lead={selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onEdit={handleEditLead}
+        onDelete={handleDeleteLead}
+        getProvinceLabel={getProvinceLabel}
+        getSourceLabel={getSourceLabel}
+        getStatusLabel={getStatusLabel}
+        getStatusBadgeClass={getStatusBadgeClass}
+        getAssignedUserLabel={getAssignedUserLabel}
+        formatDate={formatDate}
+      />
 
       {/* Add/Edit Lead Modal */}
       {showAddModal && (

@@ -3,21 +3,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import AuthService from '../services/auth.service';
 import userService from '../services/user.service';
-import LeadDetailModal from './LeadDetailModal_New';
-import {
-  MdFirstPage,
-  MdChevronLeft,
-  MdChevronRight,
-  MdLastPage,
-  MdPeople,
-  MdClear,
-  MdAdd,
-  MdSearch,
-  MdFilterList,
-  MdInfo,
-  MdArrowUpward,
-  MdArrowDownward
-} from 'react-icons/md';
 import './LeadManagement.css';
 
 const LeadManagement = () => {
@@ -29,7 +14,7 @@ const LeadManagement = () => {
   const [editingLead, setEditingLead] = useState(null);
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
-  const [currentUser] = useState(() => AuthService.getCurrentUser());
+  const [currentUser] = useState(AuthService.getCurrentUser);
   
   const [pagination, setPagination] = useState({
     page: 0,
@@ -60,22 +45,6 @@ const LeadManagement = () => {
     createdDateTo: null
   });
 
-  const [appliedFilters, setAppliedFilters] = useState({
-    search: '',
-    fullName: '',
-    phone: '',
-    email: '',
-    company: '',
-    province: '',
-    source: '',
-    status: '',
-    assignedUserId: '',
-    myAssignedLeads: false,
-    myCreatedLeads: false,
-    createdDateFrom: null,
-    createdDateTo: null
-  });
-
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -88,101 +57,80 @@ const LeadManagement = () => {
     notes: ''
   });
 
-  // Debug selectedLead changes
-  useEffect(() => {
-    console.log('selectedLead state changed:', selectedLead);
-  }, [selectedLead]);
-
-  // Constants - Updated to match backend VietnamProvince enum
+  // Constants
   const provinces = [
-    // Miền Bắc
-    { value: 'HA_NOI', label: 'Hà Nội' },
-    { value: 'HAI_PHONG', label: 'Hải Phòng' },
-    { value: 'QUANG_NINH', label: 'Quảng Ninh' },
-    { value: 'LANG_SON', label: 'Lạng Sơn' },
-    { value: 'CAO_BANG', label: 'Cao Bằng' },
-    { value: 'BAC_KAN', label: 'Bắc Kạn' },
-    { value: 'THAI_NGUYEN', label: 'Thái Nguyên' },
-    { value: 'PHU_THO', label: 'Phú Thọ' },
-    { value: 'VINH_PHUC', label: 'Vĩnh Phúc' },
-    { value: 'BAC_GIANG', label: 'Bắc Giang' },
-    { value: 'BAC_NINH', label: 'Bắc Ninh' },
-    { value: 'HUNG_YEN', label: 'Hưng Yên' },
-    { value: 'HAI_DUONG', label: 'Hải Dương' },
-    { value: 'HOA_BINH', label: 'Hòa Bình' },
-    { value: 'HA_NAM', label: 'Hà Nam' },
-    { value: 'NAM_DINH', label: 'Nam Định' },
-    { value: 'THAI_BINH', label: 'Thái Bình' },
-    { value: 'NINH_BINH', label: 'Ninh Bình' },
-    { value: 'HA_GIANG', label: 'Hà Giang' },
-    { value: 'TUYEN_QUANG', label: 'Tuyên Quang' },
-    { value: 'LAI_CHAU', label: 'Lai Châu' },
-    { value: 'DIEN_BIEN', label: 'Điện Biên' },
-    { value: 'SON_LA', label: 'Sơn La' },
-    { value: 'YEN_BAI', label: 'Yên Bái' },
-    { value: 'LAO_CAI', label: 'Lào Cai' },
-
-    // Miền Trung
-    { value: 'THANH_HOA', label: 'Thanh Hóa' },
-    { value: 'NGHE_AN', label: 'Nghệ An' },
-    { value: 'HA_TINH', label: 'Hà Tĩnh' },
-    { value: 'QUANG_BINH', label: 'Quảng Bình' },
-    { value: 'QUANG_TRI', label: 'Quảng Trị' },
-    { value: 'THUA_THIEN_HUE', label: 'Thừa Thiên Huế' },
-    { value: 'DA_NANG', label: 'Đà Nẵng' },
-    { value: 'QUANG_NAM', label: 'Quảng Nam' },
-    { value: 'QUANG_NGAI', label: 'Quảng Ngãi' },
-    { value: 'BINH_DINH', label: 'Bình Định' },
-    { value: 'PHU_YEN', label: 'Phú Yên' },
-    { value: 'KHANH_HOA', label: 'Khánh Hòa' },
-    { value: 'NINH_THUAN', label: 'Ninh Thuận' },
-    { value: 'BINH_THUAN', label: 'Bình Thuận' },
-    { value: 'KON_TUM', label: 'Kon Tum' },
-    { value: 'GIA_LAI', label: 'Gia Lai' },
-    { value: 'DAK_LAK', label: 'Đắk Lắk' },
-    { value: 'DAK_NONG', label: 'Đắk Nông' },
-    { value: 'LAM_DONG', label: 'Lâm Đồng' },
-
-    // Miền Nam
-    { value: 'HO_CHI_MINH', label: 'Hồ Chí Minh' },
-    { value: 'BA_RIA_VUNG_TAU', label: 'Bà Rịa - Vũng Tàu' },
-    { value: 'BINH_DUONG', label: 'Bình Dương' },
-    { value: 'BINH_PHUOC', label: 'Bình Phước' },
-    { value: 'DONG_NAI', label: 'Đồng Nai' },
-    { value: 'TAY_NINH', label: 'Tây Ninh' },
-    { value: 'LONG_AN', label: 'Long An' },
-    { value: 'AN_GIANG', label: 'An Giang' },
-    { value: 'DONG_THAP', label: 'Đồng Tháp' },
-    { value: 'TIEN_GIANG', label: 'Tiền Giang' },
-    { value: 'VINH_LONG', label: 'Vĩnh Long' },
-    { value: 'BEN_TRE', label: 'Bến Tre' },
-    { value: 'CAN_THO', label: 'Cần Thơ' },
-    { value: 'KIEN_GIANG', label: 'Kiên Giang' },
-    { value: 'CA_MAU', label: 'Cà Mau' },
-    { value: 'BAC_LIEU', label: 'Bạc Liêu' },
-    { value: 'SOC_TRANG', label: 'Sóc Trăng' },
-    { value: 'HAU_GIANG', label: 'Hậu Giang' }
+    { value: 'HN', label: 'Hà Nội' },
+    { value: 'HCM', label: 'TP. Hồ Chí Minh' },
+    { value: 'DN', label: 'Đà Nẵng' },
+    { value: 'HP', label: 'Hải Phòng' },
+    { value: 'CT', label: 'Cần Thơ' },
+    { value: 'AG', label: 'An Giang' },
+    { value: 'BL', label: 'Bạc Liêu' },
+    { value: 'BV', label: 'Bà Rịa - Vũng Tàu' },
+    { value: 'BD', label: 'Bình Dương' },
+    { value: 'BT', label: 'Bình Thuận' },
+    { value: 'BPH', label: 'Bình Phước' },
+    { value: 'BD', label: 'Bình Định' },
+    { value: 'CG', label: 'Cao Bằng' },
+    { value: 'DT', label: 'Đồng Tháp' },
+    { value: 'GL', label: 'Gia Lai' },
+    { value: 'HG', label: 'Hà Giang' },
+    { value: 'HN', label: 'Hà Nam' },
+    { value: 'HT', label: 'Hà Tĩnh' },
+    { value: 'HD', label: 'Hải Dương' },
+    { value: 'HB', label: 'Hòa Bình' },
+    { value: 'HY', label: 'Hưng Yên' },
+    { value: 'KH', label: 'Khánh Hòa' },
+    { value: 'KG', label: 'Kiên Giang' },
+    { value: 'KT', label: 'Kon Tum' },
+    { value: 'LC', label: 'Lào Cai' },
+    { value: 'LD', label: 'Lâm Đồng' },
+    { value: 'LS', label: 'Lạng Sơn' },
+    { value: 'LCH', label: 'Long An' },
+    { value: 'ND', label: 'Nam Định' },
+    { value: 'NA', label: 'Nghệ An' },
+    { value: 'NB', label: 'Ninh Bình' },
+    { value: 'NT', label: 'Ninh Thuận' },
+    { value: 'PY', label: 'Phú Yên' },
+    { value: 'PT', label: 'Phú Thọ' },
+    { value: 'QB', label: 'Quảng Bình' },
+    { value: 'QN', label: 'Quảng Nam' },
+    { value: 'QNG', label: 'Quảng Ngãi' },
+    { value: 'QNI', label: 'Quảng Ninh' },
+    { value: 'QT', label: 'Quảng Trị' },
+    { value: 'ST', label: 'Sóc Trăng' },
+    { value: 'SL', label: 'Sơn La' },
+    { value: 'TY', label: 'Tây Ninh' },
+    { value: 'TB', label: 'Thái Bình' },
+    { value: 'TN', label: 'Thái Nguyên' },
+    { value: 'TH', label: 'Thanh Hóa' },
+    { value: 'HU', label: 'Thừa Thiên Huế' },
+    { value: 'TG', label: 'Tiền Giang' },
+    { value: 'TV', label: 'Trà Vinh' },
+    { value: 'TQ', label: 'Tuyên Quang' },
+    { value: 'VL', label: 'Vĩnh Long' },
+    { value: 'VP', label: 'Vĩnh Phúc' },
+    { value: 'YB', label: 'Yên Bái' }
   ];
 
   const sourceOptions = [
-    { value: 'WEBSITE', label: 'Website' },
     { value: 'FACEBOOK', label: 'Facebook' },
     { value: 'GOOGLE', label: 'Google' },
-    { value: 'REFERRAL', label: 'Giới thiệu' },
-    { value: 'PHONE', label: 'Điện thoại' },
+    { value: 'WEBSITE', label: 'Website' },
+    { value: 'GIOI_THIEU', label: 'Giới thiệu' },
+    { value: 'HOTLINE', label: 'Hotline' },
     { value: 'EMAIL', label: 'Email' },
-    { value: 'EVENT', label: 'Sự kiện' },
-    { value: 'OTHER', label: 'Khác' }
+    { value: 'OFFLINE', label: 'Offline' },
+    { value: 'KHAC', label: 'Khác' }
   ];
 
   const leadStatuses = [
     { value: 'CHUA_GOI', label: 'Chưa gọi' },
-    { value: 'CHUA_LIEN_HE_DUOC', label: 'Chưa liên hệ được' },
-    { value: 'WARM_LEAD', label: 'Warm lead' },
-    { value: 'COLD_LEAD', label: 'Cold lead' },
-    { value: 'TU_CHOI', label: 'Từ chối' },
-    { value: 'HUY', label: 'Hủy' },
-    { value: 'KY_HOP_DONG', label: 'Ký hợp đồng' }
+    { value: 'DA_GOI', label: 'Đã gọi' },
+    { value: 'QUAN_TAM', label: 'Quan tâm' },
+    { value: 'KHONG_QUAN_TAM', label: 'Không quan tâm' },
+    { value: 'THANH_CONG', label: 'Thành công' },
+    { value: 'THAT_BAI', label: 'Thất bại' }
   ];
 
   // Helper functions
@@ -204,12 +152,11 @@ const LeadManagement = () => {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'CHUA_GOI': return 'bg-secondary';
-      case 'CHUA_LIEN_HE_DUOC': return 'bg-info';
-      case 'WARM_LEAD': return 'bg-warning text-dark';
-      case 'COLD_LEAD': return 'bg-primary';
-      case 'TU_CHOI': return 'bg-danger';
-      case 'HUY': return 'bg-dark';
-      case 'KY_HOP_DONG': return 'bg-success';
+      case 'DA_GOI': return 'bg-info';
+      case 'QUAN_TAM': return 'bg-warning text-dark';
+      case 'KHONG_QUAN_TAM': return 'bg-danger';
+      case 'THANH_CONG': return 'bg-success';
+      case 'THAT_BAI': return 'bg-dark';
       default: return 'bg-secondary';
     }
   };
@@ -237,195 +184,83 @@ const LeadManagement = () => {
     }
   };
 
-  // Debug useEffect to monitor selectedLead changes
-  useEffect(() => {
-    if (selectedLead) {
-      console.log('Lead selected for modal:', selectedLead.id);
-    }
-  }, [selectedLead]);
-
   // API functions
   const fetchLeads = useCallback(async () => {
-    console.log('fetchLeads called with pagination:', pagination, 'appliedFilters:', appliedFilters);
     try {
       setLoading(true);
       const token = AuthService.getToken();
-      console.log('Token for API call:', token);
-      console.log('Pagination state:', pagination);
       
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-      
-      // Build query parameters with validation
-      const page = (typeof pagination.page === 'number' && !isNaN(pagination.page) && pagination.page >= 0) ? pagination.page : 0;
-      const size = (typeof pagination.size === 'number' && !isNaN(pagination.size) && pagination.size > 0) ? pagination.size : 20;
-      const sortBy = pagination.sortBy || 'updatedAt';
-      const sortDirection = pagination.sortDirection || 'desc';
-
+      // Build query parameters
       const queryParams = new URLSearchParams({
-        page: page.toString(),
-        size: size.toString(),
-        sortBy: sortBy,
-        sortDirection: sortDirection
-      });
-      
-      console.log('Making API request to:', `http://localhost:8080/api/leads/page?${queryParams}`);
-      console.log('Headers:', {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        page: pagination.page.toString(),
+        size: pagination.size.toString(),
+        sortBy: pagination.sortBy,
+        sortDirection: pagination.sortDirection
       });
 
-      // Add applied filters to query parameters
-      console.log('AppliedFilters before adding to query:', appliedFilters);
-      if (appliedFilters.search) queryParams.append('search', appliedFilters.search);
-      if (appliedFilters.fullName) queryParams.append('fullName', appliedFilters.fullName);
-      if (appliedFilters.phone) queryParams.append('phone', appliedFilters.phone);
-      if (appliedFilters.email) queryParams.append('email', appliedFilters.email);
-      if (appliedFilters.company) queryParams.append('company', appliedFilters.company);
-      if (appliedFilters.province) {
-        console.log('Adding province to query:', appliedFilters.province);
-        queryParams.append('province', appliedFilters.province);
-      }
-      if (appliedFilters.source) queryParams.append('source', appliedFilters.source);
-      if (appliedFilters.status) queryParams.append('status', appliedFilters.status);
-      if (appliedFilters.assignedUserId) queryParams.append('assignedUserId', appliedFilters.assignedUserId);
-      if (appliedFilters.myAssignedLeads) queryParams.append('myAssignedLeads', 'true');
-      if (appliedFilters.myCreatedLeads) queryParams.append('myCreatedLeads', 'true');
-      if (appliedFilters.createdDateFrom) queryParams.append('createdDateFrom', appliedFilters.createdDateFrom.toISOString().split('T')[0]);
-      if (appliedFilters.createdDateTo) queryParams.append('createdDateTo', appliedFilters.createdDateTo.toISOString().split('T')[0]);
+      // Add filters
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.fullName) queryParams.append('fullName', filters.fullName);
+      if (filters.phone) queryParams.append('phone', filters.phone);
+      if (filters.email) queryParams.append('email', filters.email);
+      if (filters.company) queryParams.append('company', filters.company);
+      if (filters.province) queryParams.append('province', filters.province);
+      if (filters.source) queryParams.append('source', filters.source);
+      if (filters.status) queryParams.append('status', filters.status);
+      if (filters.assignedUserId) queryParams.append('assignedUserId', filters.assignedUserId);
+      if (filters.myAssignedLeads) queryParams.append('myAssignedLeads', 'true');
+      if (filters.myCreatedLeads) queryParams.append('myCreatedLeads', 'true');
+      if (filters.createdDateFrom) queryParams.append('createdDateFrom', filters.createdDateFrom.toISOString().split('T')[0]);
+      if (filters.createdDateTo) queryParams.append('createdDateTo', filters.createdDateTo.toISOString().split('T')[0]);
 
-      console.log('Final query URL:', `http://localhost:8080/api/leads/page?${queryParams}`);
-
-      const response = await fetch(`http://localhost:8080/api/leads/page?${queryParams}`, {
+      const response = await fetch(`/api/leads/page?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
+      if (!response.ok) throw new Error('Failed to fetch leads');
 
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        console.error('Error parsing JSON response:', parseError);
-        console.error('Raw response text:', await response.text());
-        throw new Error('Invalid JSON response from server');
-      }
-      
-      console.log('Raw API Response:', data);
-      console.log('Response content:', data.content);
-      console.log('Response content type:', typeof data.content);
-      console.log('Response content length:', data.content ? data.content.length : 'undefined');
-
-      // Validate that API returned the correct page
-      if (data.number !== page) {
-        console.warn(`API returned wrong page. Requested: ${page}, Got: ${data.number}`);
-      }
-
-      setLeads(data.content || []);
-      setFilteredLeads(data.content || []);
-      console.log('Updated leads with', (data.content || []).length, 'items');
-      console.log('First few leads:', (data.content || []).slice(0, 3));
-      console.log('Setting leads state with:', data.content || []);
-      console.log('Setting filteredLeads state with:', data.content || []);
+      const data = await response.json();
+      setLeads(data.content);
+      setFilteredLeads(data.content);
       setPagination(prev => ({
         ...prev,
-        // Don't update page from response to preserve user selection
-        // Only update metadata
-        size: (typeof data.size === 'number' && !isNaN(data.size)) ? data.size : prev.size,
-        totalPages: (typeof data.totalPages === 'number' && !isNaN(data.totalPages)) ? data.totalPages : 0,
-        totalElements: (typeof data.totalElements === 'number' && !isNaN(data.totalElements)) ? data.totalElements : 0,
-        first: Boolean(data.first),
-        last: Boolean(data.last),
-        hasNext: Boolean(data.hasNext),
-        hasPrevious: Boolean(data.hasPrevious)
+        page: data.number,
+        size: data.size,
+        totalPages: data.totalPages,
+        totalElements: data.totalElements,
+        first: data.first,
+        last: data.last,
+        hasNext: data.hasNext,
+        hasPrevious: data.hasPrevious
       }));
     } catch (error) {
       console.error('Error fetching leads:', error);
-      // Reset to safe state on error
-      setLeads([]);
-      setFilteredLeads([]);
-      setPagination(prev => ({
-        ...prev,
-        page: 0,
-        size: 20,
-        totalPages: 0,
-        totalElements: 0,
-        first: true,
-        last: true,
-        hasNext: false,
-        hasPrevious: false
-      }));
       alert('Lỗi khi tải danh sách leads: ' + error.message);
     } finally {
       setLoading(false);
     }
-  }, [pagination.page, pagination.size, pagination.sortBy, pagination.sortDirection, appliedFilters]);
-
-  // Debug useEffect to track pagination changes
-  useEffect(() => {
-    console.log('Pagination state changed:', pagination);
-  }, [pagination]);
+  }, [pagination.page, pagination.size, pagination.sortBy, pagination.sortDirection, filters]);
 
   const fetchLeadDetails = async (leadId) => {
-    console.log('fetchLeadDetails called with leadId:', leadId);
     try {
       const token = AuthService.getToken();
-      console.log('Token:', token ? 'present' : 'missing');
-      
-      // Fetch lead details
-      const leadResponse = await fetch(`http://localhost:8080/api/leads/${leadId}`, {
+      const response = await fetch(`/api/leads/${leadId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      console.log('Lead response status:', leadResponse.status);
-      if (!leadResponse.ok) throw new Error('Failed to fetch lead details');
+      if (!response.ok) throw new Error('Failed to fetch lead details');
 
-      const leadData = await leadResponse.json();
-      console.log('Lead data fetched:', leadData);
-      
-      // Fetch lead status history
-      const historyResponse = await fetch(`http://localhost:8080/api/leads/${leadId}/status-history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      let historyData = [];
-      if (historyResponse.ok) {
-        historyData = await historyResponse.json();
-        console.log('History data fetched:', historyData);
-      } else {
-        console.warn('Could not fetch lead history');
-      }
-
-      // Combine lead data with history
-      const leadWithHistory = {
-        ...leadData,
-        statusHistory: historyData
-      };
-
-      console.log('Combined lead with history:', leadWithHistory);
-      setSelectedLead(leadWithHistory);
+      const data = await response.json();
+      setSelectedLead(data);
     } catch (error) {
       console.error('Error fetching lead details:', error);
-      // For debugging, let's set basic lead data
-      const basicLead = leads.find(lead => lead.id === leadId);
-      if (basicLead) {
-        console.log('Using basic lead data:', basicLead);
-        setSelectedLead({...basicLead, statusHistory: []});
-      }
+      alert('Lỗi khi tải chi tiết lead: ' + error.message);
     }
   };
 
@@ -441,22 +276,11 @@ const LeadManagement = () => {
 
   // Event handlers
   const handleFilterChange = (key, value) => {
-    setFilters(prev => {
-      const newFilters = { ...prev, [key]: value };
-      // Auto-apply filters when changed for better UX
-      setAppliedFilters(newFilters);
-      setPagination(prevPagination => ({ ...prevPagination, page: 0 }));
-      return newFilters;
-    });
+    setFilters(prev => ({ ...prev, [key]: value }));
   };
 
   const handlePageChange = (newPage) => {
-    console.log('handlePageChange called with newPage:', newPage);
-    console.log('Current pagination.page:', pagination.page);
-    setPagination(prev => {
-      console.log('Setting pagination.page from', prev.page, 'to', newPage);
-      return { ...prev, page: newPage };
-    });
+    setPagination(prev => ({ ...prev, page: newPage }));
   };
 
   const handlePageSizeChange = (newSize) => {
@@ -473,14 +297,11 @@ const LeadManagement = () => {
   };
 
   const applyFilters = () => {
-    // Apply current filters and reset to first page
-    setAppliedFilters({...filters});
     setPagination(prev => ({ ...prev, page: 0 }));
-    // fetchLeads will be called automatically via useEffect
   };
 
   const clearFilters = () => {
-    const emptyFilters = {
+    setFilters({
       search: '',
       fullName: '',
       phone: '',
@@ -494,28 +315,25 @@ const LeadManagement = () => {
       myCreatedLeads: false,
       createdDateFrom: null,
       createdDateTo: null
-    };
-    setFilters(emptyFilters);
-    setAppliedFilters(emptyFilters);
+    });
     setPagination(prev => ({ ...prev, page: 0 }));
-    // fetchLeads will be called automatically via useEffect
   };
 
   const getActiveFiltersCount = () => {
     let count = 0;
-    if (appliedFilters.search) count++;
-    if (appliedFilters.fullName) count++;
-    if (appliedFilters.phone) count++;
-    if (appliedFilters.email) count++;
-    if (appliedFilters.company) count++;
-    if (appliedFilters.province) count++;
-    if (appliedFilters.source) count++;
-    if (appliedFilters.status) count++;
-    if (appliedFilters.assignedUserId) count++;
-    if (appliedFilters.myAssignedLeads) count++;
-    if (appliedFilters.myCreatedLeads) count++;
-    if (appliedFilters.createdDateFrom) count++;
-    if (appliedFilters.createdDateTo) count++;
+    if (filters.search) count++;
+    if (filters.fullName) count++;
+    if (filters.phone) count++;
+    if (filters.email) count++;
+    if (filters.company) count++;
+    if (filters.province) count++;
+    if (filters.source) count++;
+    if (filters.status) count++;
+    if (filters.assignedUserId) count++;
+    if (filters.myAssignedLeads) count++;
+    if (filters.myCreatedLeads) count++;
+    if (filters.createdDateFrom) count++;
+    if (filters.createdDateTo) count++;
     return count;
   };
 
@@ -523,7 +341,7 @@ const LeadManagement = () => {
     e.preventDefault();
     try {
       const token = AuthService.getToken();
-      const url = editingLead ? `http://localhost:8080/api/leads/${editingLead.id}` : 'http://localhost:8080/api/leads';
+      const url = editingLead ? `/api/leads/${editingLead.id}` : '/api/leads';
       const method = editingLead ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -585,7 +403,7 @@ const LeadManagement = () => {
 
     try {
       const token = AuthService.getToken();
-      const response = await fetch(`http://localhost:8080/api/leads/${lead.id}`, {
+      const response = await fetch(`/api/leads/${lead.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -604,31 +422,12 @@ const LeadManagement = () => {
   };
 
   // Effects
-  // Note: fetchLeads is already called in the useEffect with proper dependencies above
-  // No need for additional useEffect as it would cause duplicate API calls
-
-  // Fetch users on component mount
   useEffect(() => {
+    fetchLeads();
     fetchUsers();
-  }, []);
+  }, [fetchLeads]);
 
-  // Initial data fetch on component mount
-  useEffect(() => {
-    console.log('Component mounted, calling fetchLeads');
-    fetchLeads();
-  }, []); // Empty dependency array means this runs only on mount
-
-  // Fetch data when pagination or appliedFilters change
-  useEffect(() => {
-    console.log('Pagination or appliedFilters changed, calling fetchLeads');
-    console.log('Current pagination:', pagination);
-    console.log('Current appliedFilters:', appliedFilters);
-    fetchLeads();
-  }, [pagination.page, pagination.size, pagination.sortBy, pagination.sortDirection, appliedFilters, fetchLeads]);
-
-  // Debug render
-  console.log('LeadManagement render - leads:', leads, 'filteredLeads:', filteredLeads, 'loading:', loading);
-
+  // Render
   return (
     <div className="lead-management-container">
       {/* Header */}
@@ -636,7 +435,7 @@ const LeadManagement = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h2 className="mb-1">
-              <MdPeople className="me-2 text-primary" />
+              <i className="fas fa-users me-2 text-primary"></i>
               Quản lý Lead
             </h2>
             <p className="text-muted mb-0">
@@ -649,22 +448,22 @@ const LeadManagement = () => {
               onClick={clearFilters}
               title="Xóa tất cả bộ lọc"
             >
-              <MdClear className="me-1" />
+              <i className="fas fa-eraser me-1"></i>
               Xóa lọc
             </button>
             <button 
               className="btn btn-primary"
               onClick={() => setShowAddModal(true)}
             >
-              <MdAdd className="me-2" />
+              <i className="fas fa-plus me-2"></i>
               Thêm Lead
             </button>
           </div>
         </div>
       </div>
 
-      {/* Lead Content Area */}
-      <div className="lead-content">
+      {/* Main Content Area */}
+      <div className="main-content">
         {/* Sticky Search & Filter Section */}
         <div className="sticky-filter-section">
           {/* Global Search */}
@@ -678,7 +477,7 @@ const LeadManagement = () => {
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
-                <MdSearch className="position-absolute top-50 end-0 translate-middle-y me-3 text-muted" />
+                <i className="fas fa-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
               </div>
             </div>
             <div className="col-md-6 text-end">
@@ -748,7 +547,7 @@ const LeadManagement = () => {
                   onClick={applyFilters}
                   style={{ minWidth: '60px' }}
                 >
-                  <MdFilterList className="me-1" />
+                  <i className="fas fa-filter me-1"></i>
                   Lọc
                 </button>
                 <button
@@ -757,7 +556,7 @@ const LeadManagement = () => {
                   onClick={clearFilters}
                   style={{ minWidth: '50px' }}
                 >
-                  <MdClear className="me-1" />
+                  <i className="fas fa-eraser me-1"></i>
                   Xóa
                 </button>
               </div>
@@ -855,23 +654,6 @@ const LeadManagement = () => {
                   placeholderText="Chọn từ ngày"
                   className="form-control form-control-sm"
                   maxDate={new Date()}
-                  popperClassName="datepicker-high-z-index"
-                  calendarClassName="custom-datepicker"
-                  onCalendarOpen={() => {
-                    // Force high z-index when calendar opens
-                    setTimeout(() => {
-                      const popper = document.querySelector('.react-datepicker-popper');
-                      if (popper) {
-                        popper.style.zIndex = '2147483647';
-                        popper.style.position = 'fixed';
-                      }
-                      const datepicker = document.querySelector('.react-datepicker');
-                      if (datepicker) {
-                        datepicker.style.zIndex = '2147483647';
-                        datepicker.style.position = 'fixed';
-                      }
-                    }, 0);
-                  }}
                 />
               </div>
               <div className="col-md-3">
@@ -884,28 +666,11 @@ const LeadManagement = () => {
                   className="form-control form-control-sm"
                   minDate={filters.createdDateFrom}
                   maxDate={new Date()}
-                  popperClassName="datepicker-high-z-index"
-                  calendarClassName="custom-datepicker"
-                  onCalendarOpen={() => {
-                    // Force high z-index when calendar opens
-                    setTimeout(() => {
-                      const popper = document.querySelector('.react-datepicker-popper');
-                      if (popper) {
-                        popper.style.zIndex = '2147483647';
-                        popper.style.position = 'fixed';
-                      }
-                      const datepicker = document.querySelector('.react-datepicker');
-                      if (datepicker) {
-                        datepicker.style.zIndex = '2147483647';
-                        datepicker.style.position = 'fixed';
-                      }
-                    }, 0);
-                  }}
                 />
               </div>
               <div className="col-md-6 d-flex align-items-end">
                 <div className="text-muted small">
-                  <MdInfo className="me-1" />
+                  <i className="fas fa-info-circle me-1"></i>
                   Click vào ô ngày để mở lịch. Chọn "Từ ngày" trước, sau đó chọn "Đến ngày"
                 </div>
               </div>
@@ -926,7 +691,7 @@ const LeadManagement = () => {
                   >
                     Tên khách hàng
                     {pagination.sortBy === 'fullName' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -946,7 +711,7 @@ const LeadManagement = () => {
                   >
                     Email
                     {pagination.sortBy === 'email' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -956,7 +721,7 @@ const LeadManagement = () => {
                   >
                     Công ty
                     {pagination.sortBy === 'company' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -966,7 +731,7 @@ const LeadManagement = () => {
                   >
                     Tỉnh/TP
                     {pagination.sortBy === 'province' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -976,7 +741,7 @@ const LeadManagement = () => {
                   >
                     Nguồn
                     {pagination.sortBy === 'source' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -986,7 +751,7 @@ const LeadManagement = () => {
                   >
                     Trạng thái
                     {pagination.sortBy === 'status' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th style={{ width: '140px', minWidth: '140px' }}>Người phụ trách</th>
@@ -997,7 +762,7 @@ const LeadManagement = () => {
                   >
                     Cập nhật
                     {pagination.sortBy === 'updatedAt' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                   <th 
@@ -1007,7 +772,7 @@ const LeadManagement = () => {
                   >
                     Ngày tạo
                     {pagination.sortBy === 'createdAt' && (
-                      pagination.sortDirection === 'asc' ? <MdArrowUpward className="ms-1" /> : <MdArrowDownward className="ms-1" />
+                      <i className={`fas fa-sort-${pagination.sortDirection === 'asc' ? 'up' : 'down'} ms-1`}></i>
                     )}
                   </th>
                 </tr>
@@ -1025,7 +790,7 @@ const LeadManagement = () => {
                 ) : filteredLeads.length === 0 ? (
                   <tr>
                     <td colSpan="10" className="text-center text-muted py-5">
-                      <MdSearch className="mb-3 text-muted" style={{ fontSize: '2rem' }} />
+                      <i className="fas fa-search fa-2x mb-3 text-muted"></i>
                       <br />
                       {leads.length === 0 ? (
                         <div>
@@ -1047,12 +812,7 @@ const LeadManagement = () => {
                     <tr 
                       key={lead.id} 
                       className="clickable-row"
-                      onClick={(e) => {
-                        console.log('Row clicked for lead:', lead.id, lead.fullName);
-                        e.preventDefault();
-                        e.stopPropagation();
-                        fetchLeadDetails(lead.id);
-                      }}
+                      onClick={() => fetchLeadDetails(lead.id)}
                       style={{ cursor: 'pointer' }}
                       title="Nhấn để xem chi tiết"
                     >
@@ -1130,7 +890,7 @@ const LeadManagement = () => {
                     onClick={() => handlePageChange(0)}
                     disabled={pagination.first}
                   >
-                    <MdFirstPage />
+                    <i className="fas fa-angle-double-left"></i>
                   </button>
                 </li>
                 <li className={`page-item ${!pagination.hasPrevious ? 'disabled' : ''}`}>
@@ -1139,35 +899,26 @@ const LeadManagement = () => {
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={!pagination.hasPrevious}
                   >
-                    <MdChevronLeft />
+                    <i className="fas fa-angle-left"></i>
                   </button>
                 </li>
                 
-                {/* Page numbers - Simple display */}
-                {pagination.totalPages > 0 && !isNaN(pagination.totalPages) && !isNaN(pagination.page) && Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                {/* Page numbers */}
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                   let pageNumber;
                   if (pagination.totalPages <= 5) {
-                    // Show all pages if total <= 5
                     pageNumber = i;
                   } else if (pagination.page <= 2) {
-                    // Show first 5 pages
                     pageNumber = i;
                   } else if (pagination.page >= pagination.totalPages - 3) {
-                    // Show last 5 pages
                     pageNumber = pagination.totalPages - 5 + i;
                   } else {
-                    // Show current page in middle
                     pageNumber = pagination.page - 2 + i;
                   }
-
-                  // Ensure pageNumber is valid
-                  if (isNaN(pageNumber) || pageNumber < 0 || pageNumber >= pagination.totalPages) {
-                    return null;
-                  }
-
+                  
                   return (
-                    <li key={`page-${pageNumber}`} className={`page-item ${pagination.page === pageNumber ? 'active' : ''}`}>
-                      <button
+                    <li key={pageNumber} className={`page-item ${pagination.page === pageNumber ? 'active' : ''}`}>
+                      <button 
                         className="page-link"
                         onClick={() => handlePageChange(pageNumber)}
                       >
@@ -1175,7 +926,7 @@ const LeadManagement = () => {
                       </button>
                     </li>
                   );
-                }).filter(Boolean)}
+                })}
                 
                 <li className={`page-item ${!pagination.hasNext ? 'disabled' : ''}`}>
                   <button 
@@ -1183,7 +934,7 @@ const LeadManagement = () => {
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={!pagination.hasNext}
                   >
-                    <MdChevronRight />
+                    <i className="fas fa-angle-right"></i>
                   </button>
                 </li>
                 <li className={`page-item ${pagination.last ? 'disabled' : ''}`}>
@@ -1192,7 +943,7 @@ const LeadManagement = () => {
                     onClick={() => handlePageChange(pagination.totalPages - 1)}
                     disabled={pagination.last}
                   >
-                    <MdLastPage />
+                    <i className="fas fa-angle-double-right"></i>
                   </button>
                 </li>
               </ul>
@@ -1201,58 +952,8 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* Lead Detail Modal - Using LeadDetailModal Component */}
-      <LeadDetailModal
-        lead={selectedLead}
-        onClose={() => setSelectedLead(null)}
-        onEdit={handleEditLead}
-        onDelete={handleDeleteLead}
-        getProvinceLabel={(provinceValue) => {
-          const province = provinces.find(p => p.value === provinceValue);
-          return province ? province.label : provinceValue;
-        }}
-        getSourceLabel={(sourceValue) => {
-          const source = sourceOptions.find(s => s.value === sourceValue);
-          return source ? source.label : sourceValue;
-        }}
-        getStatusLabel={(statusValue) => {
-          const status = leadStatuses.find(s => s.value === statusValue);
-          return status ? status.label : statusValue;
-        }}
-        getStatusBadgeClass={(status) => {
-          const statusClasses = {
-            'CHUA_GOI': 'bg-secondary',
-            'CHUA_LIEN_HE_DUOC': 'bg-warning',
-            'WARM_LEAD': 'bg-info',
-            'COLD_LEAD': 'bg-primary',
-            'TU_CHOI': 'bg-danger',
-            'KY_HOP_DONG': 'bg-success'
-          };
-          return statusClasses[status] || 'bg-secondary';
-        }}
-        getAssignedUserLabel={(userId) => {
-          if (!userId) return 'Chưa phân công';
-          const user = users.find(u => u.id === userId);
-          return user ? (user.fullName || user.username) : 'Không xác định';
-        }}
-        formatDate={(dateString) => {
-          if (!dateString) return '';
-          return new Date(dateString).toLocaleDateString('vi-VN');
-        }}
-        currentUser={currentUser}
-        provinces={provinces}
-        sourceOptions={sourceOptions}
-        leadStatuses={leadStatuses}
-        users={users}
-        onUpdate={() => {
-          fetchLeads(); // Refresh leads data
-          setSelectedLead(null); // Close modal
-        }}
-      />
-
-      {/* Old Modal - Keeping for now
       {/* Lead Detail Modal */}
-      {false && selectedLead && (
+      {selectedLead && (
         <div className="modal show d-block" tabIndex="-1">
           <div className="modal-dialog modal-lg">
             <div className="modal-content">

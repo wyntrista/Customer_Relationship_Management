@@ -30,8 +30,12 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = parseJwt(request);
+            logger.info("AuthTokenFilter - Request URI: {}", request.getRequestURI());
+            logger.info("AuthTokenFilter - JWT token found: {}", jwt != null ? "yes" : "no");
+            
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
                 String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                logger.info("AuthTokenFilter - Valid JWT for user: {}", username);
 
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null,
@@ -39,6 +43,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.info("AuthTokenFilter - Authentication set for user: {}", username);
+            } else {
+                logger.warn("AuthTokenFilter - Invalid or missing JWT token");
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e);

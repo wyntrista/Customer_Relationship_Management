@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
+import logo from './assets/aee0867d-798f-45d0-b353-8fb60cf9c308.jpg';
 
 import AuthService from './services/auth.service';
 import Home from './components/Home';
@@ -95,7 +96,7 @@ function App() {
           <nav className="navbar navbar-expand navbar-dark bg-dark">
             <div className="container">
               <a href="/" className="navbar-brand">
-                CRM Pro
+                <img src={logo} alt="CRM Pro" className="navbar-logo" />
               </a>
               <div className="navbar-nav ms-auto">
                 <a href="/login" className="nav-link">

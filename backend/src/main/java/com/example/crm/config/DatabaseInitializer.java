@@ -16,7 +16,6 @@ import com.example.crm.user.repository.UserRepository;
 
 import lombok.AllArgsConstructor;
 
-import java.net.PasswordAuthentication;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,7 +52,20 @@ public class DatabaseInitializer implements CommandLineRunner {
             verifyDataInsertion();
             System.out.println("=== Database Initialization Completed ===");
         } else {
-            System.out.println("Database already has data. Skipping initialization.");
+            System.out.println("Database already has data. Checking for leads...");
+            
+            // Check if leads exist, if not, insert sample leads
+            try {
+                Integer leadCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM leads", Integer.class);
+                System.out.println("Existing leads count: " + leadCount);
+                
+                if (leadCount == null || leadCount == 0) {
+                    System.out.println("No leads found. Inserting sample leads...");
+                    insertSampleLeads();
+                }
+            } catch (Exception e) {
+                System.out.println("Leads table doesn't exist or error checking leads: " + e.getMessage());
+            }
         }
 
         initializeUsers();
@@ -62,12 +74,19 @@ public class DatabaseInitializer implements CommandLineRunner {
     private boolean isDatabaseEmpty() {
         try {
             Integer roleCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM roles", Integer.class);
-            System.out.println("Existing roles count: " + roleCount);
+            Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Integer.class);
+            Integer leadCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM leads", Integer.class);
             
-            return roleCount == null || roleCount == 0;
+            System.out.println("Existing roles count: " + roleCount);
+            System.out.println("Existing users count: " + userCount);
+            System.out.println("Existing leads count: " + leadCount);
+            
+            return (roleCount == null || roleCount == 0) && 
+                   (userCount == null || userCount == 0) && 
+                   (leadCount == null || leadCount == 0);
             
         } catch (Exception e) {
-            System.out.println("Roles table doesn't exist. Database is empty.");
+            System.out.println("Tables don't exist. Database is empty.");
             return true;
         }
     }
@@ -178,6 +197,24 @@ public class DatabaseInitializer implements CommandLineRunner {
             
             userRepository.save(user);
             System.out.println("Created regular user: user/user123");
+        }
+    }
+    
+    private void insertSampleLeads() {
+        try {
+            // Insert sample leads
+            jdbcTemplate.update("INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "Nguyễn Văn A", "HO_CHI_MINH", "0912345678", "nguyenvana@example.com", "Công ty ABC", "PHONE", "CHUA_GOI", "Lead mới", 1, null, "2025-01-01 00:00:00", "2025-01-01 00:00:00");
+            
+            jdbcTemplate.update("INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "Trần Thị B", "HA_NOI", "0987654321", "tranthib@example.com", "Công ty XYZ", "EMAIL", "CHUA_LIEN_HE_DUOC", "Lead tiềm năng", 2, 3, "2025-01-02 00:00:00", "2025-01-02 00:00:00");
+            
+            jdbcTemplate.update("INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "Lê Văn C", "DA_NANG", "0901234567", "levanc@example.com", "Công ty DEF", "WEBSITE", "WARM_LEAD", "Đã liên hệ", 3, 4, "2025-01-03 00:00:00", "2025-01-03 00:00:00");
+            
+            System.out.println("Inserted sample leads successfully");
+        } catch (Exception e) {
+            System.out.println("Error inserting sample leads: " + e.getMessage());
         }
     }
 }

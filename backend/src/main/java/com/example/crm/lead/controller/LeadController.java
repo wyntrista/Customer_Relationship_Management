@@ -1,5 +1,6 @@
 package com.example.crm.lead.controller;
 
+import com.example.crm.common.dto.PageResponse;
 import com.example.crm.lead.dto.CreateLeadRequest;
 import com.example.crm.lead.dto.LeadResponse;
 import com.example.crm.lead.dto.UpdateLeadRequest;
@@ -224,5 +225,198 @@ public class LeadController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+    
+    // Paginated API endpoints
+    @GetMapping("/page")
+    public ResponseEntity<PageResponse<LeadResponse>> getLeadsPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection,
+            // Filter parameters
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String fullName,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String company,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String source,
+            @RequestParam(required = false) LeadStatus status,
+            @RequestParam(required = false) Long assignedUserId,
+            @RequestParam(required = false) Boolean myAssignedLeads,
+            @RequestParam(required = false) Boolean myCreatedLeads,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime createdDateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime createdDateTo,
+            Authentication authentication) {
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long currentUserId = userDetails.getId();
+
+        // Handle special filter cases
+        if (Boolean.TRUE.equals(myAssignedLeads)) {
+            assignedUserId = currentUserId;
+        }
+        if (Boolean.TRUE.equals(myCreatedLeads)) {
+            // For myCreatedLeads, we need to filter by creator
+            // This will require updating the service method
+        }
+
+        // Convert province string to enum if provided
+        VietnamProvince provinceEnum = null;
+        if (province != null && !province.trim().isEmpty()) {
+            System.out.println("DEBUG: Received province parameter: '" + province + "'");
+            try {
+                // Try direct enum match first
+                provinceEnum = VietnamProvince.valueOf(province.toUpperCase());
+                System.out.println("DEBUG: Direct enum match successful: " + provinceEnum);
+            } catch (IllegalArgumentException e) {
+                // If direct match fails, try to map common values
+                provinceEnum = mapProvinceStringToEnum(province);
+                System.out.println("DEBUG: Mapped province to enum: " + provinceEnum);
+            }
+        }
+
+        PageResponse<LeadResponse> response = leadService.getLeadsWithFiltersPaginated(
+            page, size, sortBy, sortDirection, search, fullName, phone, email, company,
+            provinceEnum, source, status, assignedUserId, currentUserId, createdDateFrom, createdDateTo);
+
+        return ResponseEntity.ok(response);
+    }
+
+    // Helper method to map frontend province strings to backend enum
+    private VietnamProvince mapProvinceStringToEnum(String province) {
+        if (province == null || province.trim().isEmpty()) {
+            return null;
+        }
+        
+        System.out.println("DEBUG: Mapping province '" + province + "' to uppercase '" + province.toUpperCase() + "'");
+        
+        switch (province.toUpperCase()) {
+            case "HN_CITY":
+            case "HN":
+            case "HÀ NỘI":
+            case "HA NOI":
+                System.out.println("DEBUG: Matched HA_NOI case");
+                return VietnamProvince.HA_NOI;
+            case "HCM":
+            case "HCMC":
+            case "TP. HỒ CHÍ MINH":
+            case "HỒ CHÍ MINH":
+            case "TP HCM":
+            case "TP.HCM":
+                System.out.println("DEBUG: Matched HO_CHI_MINH case");
+                return VietnamProvince.HO_CHI_MINH;
+            case "DN":
+                return VietnamProvince.DA_NANG;
+            case "HP":
+                return VietnamProvince.HAI_PHONG;
+            case "CT":
+                return VietnamProvince.CAN_THO;
+            case "AG":
+                return VietnamProvince.AN_GIANG;
+            case "BL":
+                return VietnamProvince.BAC_LIEU;
+            case "BV":
+                return VietnamProvince.BA_RIA_VUNG_TAU;
+            case "BD_DUONG":
+                return VietnamProvince.BINH_DUONG;
+            case "BT":
+                return VietnamProvince.BINH_THUAN;
+            case "BPH":
+                return VietnamProvince.BINH_PHUOC;
+            case "BD_DINH":
+                return VietnamProvince.BINH_DINH;
+            case "CG":
+                return VietnamProvince.CAO_BANG;
+            case "DT":
+                return VietnamProvince.DONG_THAP;
+            case "GL":
+                return VietnamProvince.GIA_LAI;
+            case "HG":
+                return VietnamProvince.HA_GIANG;
+            case "HN_NAM":
+                return VietnamProvince.HA_NAM;
+            case "HT":
+                return VietnamProvince.HA_TINH;
+            case "HD":
+                return VietnamProvince.HAI_DUONG;
+            case "HB":
+                return VietnamProvince.HOA_BINH;
+            case "HY":
+                return VietnamProvince.HUNG_YEN;
+            case "KH":
+                return VietnamProvince.KHANH_HOA;
+            case "KG":
+                return VietnamProvince.KIEN_GIANG;
+            case "KT":
+                return VietnamProvince.KON_TUM;
+            case "LC":
+                return VietnamProvince.LAO_CAI;
+            case "LD":
+                return VietnamProvince.LAM_DONG;
+            case "LS":
+                return VietnamProvince.LANG_SON;
+            case "LA":
+                return VietnamProvince.LONG_AN;
+            case "ND":
+                return VietnamProvince.NAM_DINH;
+            default:
+                System.out.println("DEBUG: No mapping found for '" + province + "', trying direct enum match");
+                // Try direct enum match as fallback
+                try {
+                    VietnamProvince result = VietnamProvince.valueOf(province.toUpperCase());
+                    System.out.println("DEBUG: Direct enum match successful: " + result);
+                    return result;
+                } catch (IllegalArgumentException e) {
+                    System.out.println("DEBUG: Direct enum match failed, returning null");
+                    return null; // Return null if no mapping found
+                }
+        }
+    }
+    
+    @GetMapping("/page/status/{status}")
+    public ResponseEntity<PageResponse<LeadResponse>> getLeadsByStatusPaginated(
+            @PathVariable LeadStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        PageResponse<LeadResponse> response = leadService.getLeadsByStatusPaginated(status, page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/page/assigned/{userId}")
+    public ResponseEntity<PageResponse<LeadResponse>> getLeadsByAssignedUserPaginated(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        PageResponse<LeadResponse> response = leadService.getLeadsByAssignedUserPaginated(userId, page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/page/search")
+    public ResponseEntity<PageResponse<LeadResponse>> searchLeadsPaginated(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        PageResponse<LeadResponse> response = leadService.searchLeadsPaginated(keyword, page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/page/my-assigned")
+    public ResponseEntity<PageResponse<LeadResponse>> getMyAssignedLeadsPaginated(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "updatedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDirection) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        PageResponse<LeadResponse> response = leadService.getLeadsByAssignedUserPaginated(userDetails.getId(), page, size, sortBy, sortDirection);
+        return ResponseEntity.ok(response);
     }
 }

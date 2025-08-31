@@ -4,6 +4,7 @@ import useDocumentTitle from "../hooks/useDocumentTitle";
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaGoogle, FaFacebookF, FaTwitter, FaSpinner } from "react-icons/fa";
 import AuthService from "../services/auth.service";
 import "./Login.css"; // Import custom CSS
+import logo from "../assets/aee0867d-798f-45d0-b353-8fb60cf9c308.jpg";
 
 const Login = ({ setCurrentUser }) => {
   useDocumentTitle('Login');
@@ -145,7 +146,7 @@ const Login = ({ setCurrentUser }) => {
         </div>
         <div className="login-branding-section">
           <div className="branding-content">
-            <h1>CRM Pro</h1>
+            <img src={logo} alt="CRM Pro" className="login-logo" />
             <p>Your success, our priority.</p>
           </div>
         </div>

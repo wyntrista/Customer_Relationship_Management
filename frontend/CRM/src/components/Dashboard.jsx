@@ -43,24 +43,24 @@ const Dashboard = () => {
     // Priority: Admin > Marketing > Sales > Telesales > User
     if (level >= 8 || roles.includes("ROLE_ADMIN")) {
       console.log("Rendering Admin Dashboard");
-      return <AdminDashboard />;
+      return <AdminDashboard currentUser={currentUser} />;
     }
     if (level >= 4 || roles.includes("ROLE_MARKETING")) {
       console.log("Rendering Marketing Dashboard");
-      return <MarketingDashboard />;
+      return <MarketingDashboard currentUser={currentUser} />;
     }
     if (level >= 2 || roles.includes("ROLE_SALES")) {
       console.log("Rendering Sales Dashboard");
-      return <SalesDashboard />;
+      return <SalesDashboard currentUser={currentUser} />;
     }
     if (level >= 1 || roles.includes("ROLE_TELESALES")) {
       console.log("Rendering Telesales Dashboard");
-      return <TelesalesDashboard />;
+      return <TelesalesDashboard currentUser={currentUser} />;
     }
     
     // Default for permissionLevel 0 or if level is not defined
     console.log("Rendering User Dashboard");
-    return <UserDashboard />;
+    return <UserDashboard currentUser={currentUser} />;
   };
 
   return (

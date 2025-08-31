@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css'; // We will create this file for styling
+import logo from '../../assets/aee0867d-798f-45d0-b353-8fb60cf9c308.svg';
 
 const Sidebar = ({ currentUser, onLogout }) => {
   const getMenuItems = () => {
@@ -43,7 +44,7 @@ const Sidebar = ({ currentUser, onLogout }) => {
   return (
     <div className="sidebar-container">
       <div className="sidebar-header">
-        <h3>CRM Pro</h3>
+        <img src={logo} alt="CRM Pro Logo" className="sidebar-logo" />
       </div>
       <ul className="sidebar-menu">
         {getMenuItems().map((item, index) => (
@@ -55,6 +56,24 @@ const Sidebar = ({ currentUser, onLogout }) => {
           </li>
         ))}
       </ul>
+      
+      {/* User Info Section */}
+      <Link to="/profile" className="sidebar-user-info">
+        <div className="user-avatar">
+          <i className="fas fa-user-circle"></i>
+        </div>
+        <div className="user-details">
+          <div className="user-name">{currentUser?.fullName || currentUser?.username || 'User'}</div>
+          <div className="user-role">
+            {currentUser?.roles?.includes('ROLE_ADMIN') ? 'Admin' :
+             currentUser?.roles?.includes('ROLE_MARKETING') ? 'Marketing' :
+             currentUser?.roles?.includes('ROLE_SALES') ? 'Sales' :
+             currentUser?.roles?.includes('ROLE_TELESALES') ? 'Telesales' :
+             'User'}
+          </div>
+        </div>
+      </Link>
+      
       <div className="sidebar-footer">
         <Link to="/login" onClick={onLogout}>
           <i className="fas fa-sign-out-alt"></i>

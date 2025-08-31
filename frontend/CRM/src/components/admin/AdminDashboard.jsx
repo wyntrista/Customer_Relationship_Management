@@ -206,30 +206,34 @@ const AdminDashboard = ({ currentUser }) => {
               <h6 className="m-0 font-weight-bold text-primary">Recent User Activities</h6>
             </div>
             <div className="card-body">
+              <div className="alert alert-info mb-3">
+                <i className="fas fa-info-circle"></i>
+                <strong>Demo Data:</strong> Tính năng theo dõi hoạt động người dùng thật thời đang được phát triển.
+              </div>
               <div className="list-group">
                 <div className="list-group-item">
                   <div className="d-flex w-100 justify-content-between">
-                    <h6 className="mb-1">New user registered</h6>
-                    <small>5 mins ago</small>
+                    <h6 className="mb-1">Hệ thống đã sẵn sàng</h6>
+                    <small>Hôm nay</small>
                   </div>
-                  <p className="mb-1">john.doe@example.com</p>
-                  <small>Pending approval</small>
+                  <p className="mb-1">Không có hoạt động đặc biệt nào được ghi nhận</p>
+                  <small>Trạng thái bình thường</small>
                 </div>
                 <div className="list-group-item">
                   <div className="d-flex w-100 justify-content-between">
-                    <h6 className="mb-1">User role updated</h6>
-                    <small>1 hour ago</small>
+                    <h6 className="mb-1">Database đã được khởi tạo</h6>
+                    <small>Hôm nay</small>
                   </div>
-                  <p className="mb-1">jane.smith promoted to Sales Manager</p>
-                  <small>By admin</small>
+                  <p className="mb-1">Dữ liệu mẫu đã được tải thành công</p>
+                  <small>Bởi hệ thống</small>
                 </div>
                 <div className="list-group-item">
                   <div className="d-flex w-100 justify-content-between">
-                    <h6 className="mb-1">Failed login attempts</h6>
-                    <small>2 hours ago</small>
+                    <h6 className="mb-1">Hệ thống hoạt động ổn định</h6>
+                    <small>Liên tục</small>
                   </div>
-                  <p className="mb-1">5 failed attempts from IP 192.168.1.100</p>
-                  <small>Security Alert</small>
+                  <p className="mb-1">Không có cảnh báo bảo mật nào</p>
+                  <small>Trạng thái an toàn</small>
                 </div>
               </div>
             </div>
@@ -282,12 +286,17 @@ const AdminDashboard = ({ currentUser }) => {
     </div>
   );
 
-  if (!currentUser || (currentUser.permissionLevel < 8 && !currentUser.roles?.includes('ROLE_ADMIN'))) {
+  // Check if user has admin permissions
+  const hasAdminPermissions = currentUser && 
+    (currentUser.permissionLevel >= 8 || currentUser.roles?.includes('ROLE_ADMIN'));
+
+  if (!hasAdminPermissions) {
     return (
       <div className="container-fluid mt-4">
         <div className="alert alert-danger">
           <h4>Access Denied</h4>
           <p>You don't have permission to access the admin dashboard.</p>
+          <p><small>Current user: {currentUser ? currentUser.username : 'None'}, Permission Level: {currentUser?.permissionLevel}, Roles: {currentUser?.roles?.join(', ') || 'None'}</small></p>
         </div>
       </div>
     );

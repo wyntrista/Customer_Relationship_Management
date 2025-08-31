@@ -242,6 +242,15 @@
   margin-bottom: 10px;
 }
 
+.login-logo {
+  max-width: 200px;
+  height: auto;
+  max-height: 120px;
+  border-radius: 12px;
+  object-fit: contain;
+  margin-bottom: 15px;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .login-container {

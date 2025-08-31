@@ -1,0 +1,243 @@
+/* LeadDetailModal Styles */
+.lead-detail-modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lead-detail-modal .modal-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  z-index: 9998 !important;
+}
+
+.lead-detail-modal .modal-dialog {
+  position: relative !important;
+  margin: 0 !important;
+  z-index: 10000 !important;
+  max-width: 90vw !important;
+  max-height: 90vh !important;
+  width: 900px !important;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.lead-detail-modal .modal-content {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+  border: none !important;
+  border-radius: 12px !important;
+}
+
+/* Info groups styling */
+.info-group {
+  margin-bottom: 1.2rem;
+}
+
+.info-group label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 0.9rem;
+}
+
+.info-value {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #dee2e6;
+  font-size: 0.95rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.info-value:empty::before {
+  content: "Không có thông tin";
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Notes content */
+.notes-content {
+  background-color: #e7f3ff;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #b6d7ff;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  min-height: 4rem;
+}
+
+/* Status history */
+.status-history-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+}
+
+.status-history-item {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+  border-radius: 0.375rem;
+  border: 1px solid #e9ecef;
+  position: relative;
+}
+
+.status-history-item.latest {
+  border-left: 4px solid #007bff;
+  background-color: #f0f8ff;
+}
+
+.status-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-change {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.status-meta {
+  color: #6c757d;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.status-notes {
+  background-color: #fff3cd;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  border-left: 3px solid #ffc107;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+.no-history {
+  text-align: center;
+  color: #6c757d;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 0.375rem;
+  border: 2px dashed #dee2e6;
+}
+
+/* Badge styling */
+.badge.fs-6 {
+  font-size: 1rem !important;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Scrollbar styling */
+.status-history-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.status-history-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.status-history-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.status-history-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lead-detail-modal .modal-dialog {
+    max-width: 95vw !important;
+    width: 95vw !important;
+  }
+  
+  .lead-detail-modal .modal-content {
+    max-height: 95vh !important;
+  }
+  
+  .info-group {
+    margin-bottom: 1rem;
+  }
+  
+  .info-value {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .status-change {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .status-change .badge {
+    margin: 0.2rem 0;
+  }
+  
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .modal-footer .btn {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .lead-detail-modal .modal-dialog {
+    max-width: 98vw !important;
+    width: 98vw !important;
+  }
+}
