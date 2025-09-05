@@ -54,7 +54,6 @@ public class DatabaseInitializer implements CommandLineRunner {
         } else {
             System.out.println("Database already has data. Checking for leads...");
             
-            // Check if leads exist, if not, insert sample leads
             try {
                 Integer leadCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM leads", Integer.class);
                 System.out.println("Existing leads count: " + leadCount);

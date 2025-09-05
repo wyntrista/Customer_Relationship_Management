@@ -31,9 +31,6 @@ public class AdminController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    /**
-     * Lấy danh sách tất cả users (chỉ admin)
-     */
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getAllUsers() {
@@ -54,38 +51,30 @@ public class AdminController {
         return ResponseEntity.ok(userDTOs);
     }
 
-    /**
-     * Tạo user mới (chỉ admin)
-     */
     @PostMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request) {
-        // Kiểm tra username đã tồn tại
         if (userRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest()
                 .body(new MessageResponse("Error: Username is already taken!"));
         }
 
-        // Kiểm tra email đã tồn tại
         if (userRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest()
                 .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        // Tạo user mới
         User user = new User(request.getUsername(), request.getEmail(), 
                            passwordEncoder.encode(request.getPassword()));
         user.setFullName(request.getFullName());
         user.setEnabled(true);
 
-        // Set role
         Set<Role> roles = new HashSet<>();
         Role userRole = roleRepository.findByName(ERole.valueOf(request.getRole()))
                 .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         roles.add(userRole);
         user.setRoles(roles);
 
-        // Set permission level based on role
         switch (request.getRole()) {
             case "ROLE_ADMIN":
                 user.setPermissionLevel(8);
@@ -110,9 +99,6 @@ public class AdminController {
         return ResponseEntity.ok(new MessageResponse("User created successfully!"));
     }
 
-    /**
-     * Lấy thống kê hệ thống
-     */
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getSystemStats() {
@@ -122,17 +108,14 @@ public class AdminController {
         AdminStats stats = new AdminStats();
         stats.setTotalUsers(totalUsers);
         stats.setActiveUsers(activeUsers);
-        stats.setNewUsersThisMonth(12L); // TODO: Implement actual calculation
-        stats.setTotalCustomers(89L); // TODO: Implement when Customer entity is ready
-        stats.setTotalLeads(234L); // TODO: Implement when Lead entity is ready
-        stats.setTotalOpportunities(45L); // TODO: Implement when Opportunity entity is ready
+        stats.setNewUsersThisMonth(12L);
+        stats.setTotalCustomers(89L); 
+        stats.setTotalLeads(234L); 
+        stats.setTotalOpportunities(45L);
         
         return ResponseEntity.ok(stats);
     }
 
-    /**
-     * Vô hiệu hóa/kích hoạt user
-     */
     @PutMapping("/users/{userId}/toggle-status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> toggleUserStatus(@PathVariable Long userId) {
@@ -146,9 +129,6 @@ public class AdminController {
             "User status updated to " + (user.isEnabled() ? "enabled" : "disabled")));
     }
 
-    /**
-     * Xóa user
-     */
     @DeleteMapping("/users/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
@@ -161,24 +141,20 @@ public class AdminController {
         return ResponseEntity.ok(new MessageResponse("User deleted successfully"));
     }
 
-    /**
-     * Cập nhật quyền user
-     */
     @PutMapping("/users/{userId}/permission")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUserPermission(@PathVariable Long userId, @RequestBody UpdatePermissionRequest request) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Clear existing roles
+
         user.getRoles().clear();
         
-        // Add new role
         Role role = roleRepository.findByName(ERole.valueOf(request.getRole()))
             .orElseThrow(() -> new RuntimeException("Role not found"));
         user.getRoles().add(role);
         
-        // Update permission level based on role
+
         switch (request.getRole()) {
             case "ROLE_ADMIN":
                 user.setPermissionLevel(8);
@@ -202,7 +178,6 @@ public class AdminController {
         return ResponseEntity.ok(new MessageResponse("User permission updated successfully"));
     }
 
-    // DTO classes
     public static class AdminStats {
         private long totalUsers;
         private long activeUsers;
@@ -211,7 +186,6 @@ public class AdminController {
         private long totalLeads;
         private long totalOpportunities;
 
-        // Getters and setters
         public long getTotalUsers() { return totalUsers; }
         public void setTotalUsers(long totalUsers) { this.totalUsers = totalUsers; }
         

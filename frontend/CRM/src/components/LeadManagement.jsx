@@ -28,6 +28,7 @@ const LeadManagement = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false); // Loading state for form submission
   const [users, setUsers] = useState([]);
   const [currentUser] = useState(() => AuthService.getCurrentUser());
   
@@ -92,6 +93,11 @@ const LeadManagement = () => {
   useEffect(() => {
     console.log('selectedLead state changed:', selectedLead);
   }, [selectedLead]);
+  
+  // Debug showAddModal changes
+  useEffect(() => {
+    console.log('showAddModal state changed:', showAddModal);
+  }, [showAddModal]);
 
   // Constants - Updated to match backend VietnamProvince enum
   const provinces = [
@@ -521,10 +527,56 @@ const LeadManagement = () => {
 
   const handleSubmitLead = async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.fullName.trim()) {
+      alert('Vui lòng nhập họ tên');
+      return;
+    }
+    
+    if (!formData.phone.trim()) {
+      alert('Vui lòng nhập số điện thoại');
+      return;
+    }
+
+    // Email validation if provided
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert('Vui lòng nhập email hợp lệ');
+      return;
+    }
+
+    setSaving(true); // Start loading state
+
     try {
       const token = AuthService.getToken();
+      if (!token) {
+        alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+        AuthService.logout();
+        window.location.href = '/login';
+        return;
+      }
+
       const url = editingLead ? `http://localhost:8080/api/leads/${editingLead.id}` : 'http://localhost:8080/api/leads';
       const method = editingLead ? 'PUT' : 'POST';
+
+      // Prepare request data with proper enum values
+      const requestData = {
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email?.trim() || null,
+        company: formData.company?.trim() || null,
+        province: formData.province || null,
+        source: formData.source || null,
+        notes: formData.notes?.trim() || null,
+        assignedUserId: formData.assignedUserId || null
+      };
+
+      // For update requests, include status
+      if (editingLead) {
+        requestData.status = formData.status;
+      }
+
+      console.log('Submitting lead data:', requestData);
 
       const response = await fetch(url, {
         method,
@@ -532,13 +584,33 @@ const LeadManagement = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestData)
       });
 
       if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(errorData || 'Failed to save lead');
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        
+        let errorMessage = 'Failed to save lead';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        
+        if (response.status === 401) {
+          alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+          AuthService.logout();
+          window.location.href = '/login';
+          return;
+        }
+        
+        throw new Error(errorMessage);
       }
+
+      const result = await response.json();
+      console.log('Lead saved successfully:', result);
 
       alert(editingLead ? 'Cập nhật lead thành công!' : 'Thêm lead mới thành công!');
       setShowAddModal(false);
@@ -554,10 +626,15 @@ const LeadManagement = () => {
         assignedUserId: null,
         notes: ''
       });
+      
+      // Refresh the leads list
       fetchLeads();
+      
     } catch (error) {
       console.error('Error saving lead:', error);
       alert('Lỗi khi lưu lead: ' + error.message);
+    } finally {
+      setSaving(false); // End loading state
     }
   };
 
@@ -576,6 +653,30 @@ const LeadManagement = () => {
     });
     setSelectedLead(null);
     setShowAddModal(true);
+  };
+
+  const handleAddNewLead = () => {
+    console.log('handleAddNewLead called - Opening add lead modal');
+    console.log('Current selectedLead:', selectedLead);
+    console.log('Current showAddModal before:', showAddModal);
+    
+    // Close any existing modals first
+    setSelectedLead(null);
+    
+    setEditingLead(null); // Clear editing lead
+    setFormData({
+      fullName: '',
+      phone: '',
+      email: '',
+      company: '',
+      province: '',
+      source: '',
+      status: 'CHUA_GOI',
+      assignedUserId: null,
+      notes: ''
+    });
+    setShowAddModal(true);
+    console.log('showAddModal set to true');
   };
 
   const handleDeleteLead = async (lead) => {
@@ -654,7 +755,8 @@ const LeadManagement = () => {
             </button>
             <button 
               className="btn btn-primary"
-              onClick={() => setShowAddModal(true)}
+              onClick={handleAddNewLead}
+              type="button"
             >
               <MdAdd className="me-2" />
               Thêm Lead
@@ -1375,7 +1477,20 @@ const LeadManagement = () => {
 
       {/* Add/Edit Lead Modal */}
       {showAddModal && (
-        <div className="modal show d-block" tabIndex="-1">
+        <div 
+          className="modal show d-block" 
+          tabIndex="-1" 
+          style={{ 
+            zIndex: 1055, 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%',
+            backgroundColor: 'rgba(0,0,0,0.5)' 
+          }}
+        >
+          {console.log('Rendering add modal now, showAddModal:', showAddModal)}
           <div className="modal-dialog modal-lg">
             <div className="modal-content">
               <div className="modal-header">
@@ -1386,6 +1501,7 @@ const LeadManagement = () => {
                   type="button" 
                   className="btn-close" 
                   onClick={() => {
+                    console.log('Closing add modal');
                     setShowAddModal(false);
                     setEditingLead(null);
                     setFormData({
@@ -1577,8 +1693,15 @@ const LeadManagement = () => {
                     >
                       Hủy
                     </button>
-                    <button type="submit" className="btn btn-primary">
-                      {editingLead ? 'Cập nhật' : 'Thêm mới'}
+                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                      {saving ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                          Đang lưu...
+                        </>
+                      ) : (
+                        editingLead ? 'Cập nhật' : 'Thêm mới'
+                      )}
                     </button>
                   </div>
                 </form>
@@ -1590,7 +1713,7 @@ const LeadManagement = () => {
 
       {/* Background overlay for modal */}
       {(selectedLead || showAddModal) && (
-        <div className="modal-backdrop fade show"></div>
+        <div className="modal-backdrop fade show" style={{ zIndex: 1050 }}></div>
       )}
     </div>
   );

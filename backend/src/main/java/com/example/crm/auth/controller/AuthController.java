@@ -83,7 +83,6 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        // Get user to access permissionLevel
         User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -108,13 +107,10 @@ public class AuthController {
                     .badRequest()
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
-
-        // Create new user's account
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        // Set default permission level to ROLE_USER (0)
         user.setRole(ERole.ROLE_USER);
 
         Set<Role> roles = new HashSet<>();
@@ -135,24 +131,19 @@ public class AuthController {
             Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
             
             if (!userOptional.isPresent()) {
-                // Don't reveal that email doesn't exist for security reasons
                 return ResponseEntity.ok(new MessageResponse("If your email exists, you will receive a verification code."));
             }
 
-            // Generate 4-digit verification code
             String verificationCode = String.format("%04d", (int) (Math.random() * 10000));
             
-            // Delete any existing codes for this email
             List<VerificationCode> existingCodes = verificationCodeRepository.findByEmailAndType(request.getEmail(), "PASSWORD_RESET");
             if (!existingCodes.isEmpty()) {
                 verificationCodeRepository.deleteAll(existingCodes);
             }
             
-            // Create new verification code
             VerificationCode code = new VerificationCode(verificationCode, request.getEmail());
             verificationCodeRepository.save(code);
             
-            // Send verification code via email
             emailService.sendVerificationCode(request.getEmail(), verificationCode);
             
             return ResponseEntity.ok(new MessageResponse("If your email exists, you will receive a verification code."));
@@ -206,7 +197,6 @@ public class AuthController {
                         .body(new MessageResponse("Error: Verification code has expired."));
             }
 
-            // Find user by email
             Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
             if (!userOptional.isPresent()) {
                 return ResponseEntity.badRequest()

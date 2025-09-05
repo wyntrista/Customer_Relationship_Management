@@ -17,75 +17,53 @@ import java.util.List;
 @Repository
 public interface LeadRepository extends JpaRepository<Lead, Long> {
     
-    // Tìm leads theo assigned user
     List<Lead> findByAssignedUser(User assignedUser);
     
-    // Tìm leads theo creator
     List<Lead> findByCreator(User creator);
     
-    // Tìm leads theo status
     List<Lead> findByStatus(LeadStatus status);
     
-    // Tìm leads theo khu vực (tỉnh thành)
     List<Lead> findByProvince(VietnamProvince province);
     
-    // Tìm leads theo miền
     @Query("SELECT l FROM Lead l WHERE l.province IN :provinces")
     List<Lead> findByProvinceIn(@Param("provinces") List<VietnamProvince> provinces);
     
-    // Tìm leads theo nguồn
     List<Lead> findBySource(String source);
     
-    // Tìm leads theo lĩnh vực quan tâm
     List<Lead> findByCompanyContainingIgnoreCase(String company);
     
-    // Tìm leads theo tên khách hàng
     List<Lead> findByFullNameContainingIgnoreCase(String fullName);
     
-    // Tìm leads theo số điện thoại
     List<Lead> findByPhoneContaining(String phone);
     
-    // Tìm leads được tạo trong khoảng thời gian
     List<Lead> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
     
-    // Tìm leads được cập nhật trong khoảng thời gian
     List<Lead> findByUpdatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
     
-    // Query tùy chỉnh để lấy tất cả leads sắp xếp theo thời gian cập nhật mới nhất
     @Query("SELECT l FROM Lead l ORDER BY l.updatedAt DESC")
     List<Lead> findAllOrderByUpdatedAtDesc();
     
-    // Query để đếm leads theo status
     @Query("SELECT l.status, COUNT(l) FROM Lead l GROUP BY l.status")
     List<Object[]> countLeadsByStatus();
     
-    // Query để đếm leads theo nguồn
     @Query("SELECT l.source, COUNT(l) FROM Lead l GROUP BY l.source")
     List<Object[]> countLeadsBySource();
 
-    // Query để đếm leads theo khu vực (tỉnh thành)
     @Query("SELECT l.province, COUNT(l) FROM Lead l GROUP BY l.province")
     List<Object[]> countLeadsByProvince();
     
-    // ===== PAGINATION METHODS =====
-    
-    // Phân trang tất cả leads
     @Query("SELECT l FROM Lead l ORDER BY l.updatedAt DESC")
     Page<Lead> findAllPaged(Pageable pageable);
     
-    // Phân trang theo assigned user
     Page<Lead> findByAssignedUser(User assignedUser, Pageable pageable);
     
-    // Phân trang theo creator
     Page<Lead> findByCreator(User creator, Pageable pageable);
     
-    // Phân trang theo status
     Page<Lead> findByStatus(LeadStatus status, Pageable pageable);
     
-    // Phân trang theo tỉnh thành
+
     Page<Lead> findByProvince(VietnamProvince province, Pageable pageable);
     
-    // Phân trang với filter tùy chỉnh
     @Query("SELECT l FROM Lead l WHERE " +
            "(:fullName IS NULL OR :fullName = '' OR LOWER(l.fullName) LIKE LOWER(CONCAT('%', :fullName, '%'))) AND " +
            "(:province IS NULL OR l.province = :province) AND " +
@@ -112,7 +90,6 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
                                    @Param("createdDateTo") LocalDateTime createdDateTo,
                                    Pageable pageable);
     
-    // Additional pagination methods
     Page<Lead> findByAssignedUserId(Long userId, Pageable pageable);
     Page<Lead> findByFullNameContainingIgnoreCaseOrPhoneContainingOrEmailContainingIgnoreCase(
         String fullName, String phone, String email, Pageable pageable);
