@@ -152,6 +152,8 @@ public class LeadController {
         return ResponseEntity.ok(leads);
     }
 
+    
+
     // Update lead status and notes (after phone call)
     @PatchMapping("/{id}/status")
     public ResponseEntity<LeadResponse> updateLeadStatus(@PathVariable Long id,

@@ -28,7 +28,6 @@ INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (3, 4); -- telesales -> 
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (4, 5); -- sales -> ROLE_SALES
 INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (5, 1); -- user -> ROLE_USER
 
--- Insert comprehensive leads data
 INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (N'Võ Quốc Duy', 'LONG_AN', '0915004223', 'voquocduy51@example.com', N'Công ty Thủy sản Minh Phú', 'PHONE', 'CHUA_LIEN_HE_DUOC', N'Đã gửi báo giá, đang chờ phản hồi.', 4, NULL, '2025-03-01 00:00:00', '2025-03-30 00:00:00');
 INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (N'Đào Hữu Sơn', 'BAC_GIANG', '0912653825', 'aohuuson52@example.com', N'Công ty MoMo', 'REFERRAL', 'COLD_LEAD', N'Khách hàng tiềm năng cao.', 2, 1, '2024-11-25 00:00:00', '2024-12-17 00:00:00');
 INSERT IGNORE INTO leads (full_name, province, phone, email, company, source, status, notes, creator_id, assigned_user_id, created_at, updated_at) VALUES (N'Vũ Công Giang', 'BAC_KAN', '0916659713', 'vuconggiang53@example.com', N'Công ty ZaloPay', 'FACEBOOK', 'CHUA_LIEN_HE_DUOC', N'Khách hàng không quan tâm.', 5, 4, '2024-08-22 00:00:00', '2024-09-04 00:00:00');

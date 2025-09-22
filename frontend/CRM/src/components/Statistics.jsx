@@ -114,17 +114,47 @@ const Statistics = () => {
 
   // Chart colors
   const statusColors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-    '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+  '#FF4D4D', // từ chối
+  '#A9A9A9', // chưa lhd
+  '#FF6384', // ký hợp đồng
+  '#4BC0C0', // chưa gọi    
+  '#FF9F40', // warm         
+  '#2C3E50', // huỷ             
+  '#36A2EB'  // cold   
   ];
 
   const sourceColors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+   '#FF6B6B', // nóng - đỏ hồng coral
+'#4ECDC4', // lạnh - xanh ngọc mint
+'#FFD166', // neutral - vàng pastel sáng
+'#3A86FF', // lạnh - xanh cobalt
+'#FF9F1C', // nóng - cam gold
+'#9B5DE5', // nóng/lạnh - tím neon
+'#EF476F', // nóng - hồng đỏ rực
+'#06D6A0', // lạnh - xanh ngọc neon
   ];
 
   const assignedUserColors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-    '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+'#FF6B6B', // nóng - đỏ coral
+'#06AED5', // lạnh - cyan sáng
+'#FFD166', // neutral - vàng pastel
+'#3A86FF', // lạnh - xanh cobalt
+'#FF9F1C', // nóng - cam vàng
+'#73D2DE', // neutral - xanh pastel
+'#9B5DE5', // nóng/lạnh - tím neon
+'#06D6A0', // lạnh - xanh ngọc neon
+'#FFBE0B', // nóng - vàng amber
+'#118AB2', // lạnh - xanh teal đậm
+'#F9844A', // nóng - cam đất
+'#2EC4B6', // neutral - xanh biển sáng
+'#EF476F', // nóng - hồng đỏ rực
+'#40E0D0', // lạnh - turquoise
+'#FF8C42', // nóng - cam cháy
+'#A2D2FF', // neutral - xanh baby
+'#E71D36', // nóng - đỏ crimson
+'#8AC926', // lạnh - xanh lá neon
+'#FF006E', // nóng - hồng fuchsia
+'#8338EC'  // lạnh - tím royal
   ];
 
   const createChartData = (data, colors) => {
