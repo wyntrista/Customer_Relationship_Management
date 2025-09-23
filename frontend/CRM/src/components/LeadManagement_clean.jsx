@@ -396,7 +396,7 @@ const LeadManagement = () => {
     setShowAddModal(true);
   };
 
-  const handleDeleteLead = async (lead) => {
+   const handleDeleteLead = async (lead) => {
     if (!confirm(`Bạn có chắc chắn muốn xóa lead "${lead.fullName}"?`)) {
       return;
     }
@@ -420,6 +420,7 @@ const LeadManagement = () => {
       alert('Lỗi khi xóa lead: ' + error.message);
     }
   };
+
 
   // Effects
   useEffect(() => {
@@ -1288,7 +1289,7 @@ const LeadManagement = () => {
           </div>
         </div>
       )}
-
+      
       {/* Background overlay for modal */}
       {(selectedLead || showAddModal) && (
         <div className="modal-backdrop fade show"></div>

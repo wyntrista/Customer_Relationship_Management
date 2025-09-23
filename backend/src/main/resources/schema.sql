@@ -7,17 +7,17 @@ CREATE TABLE IF NOT EXISTS roles (
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(255) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    phone_number VARCHAR(255) UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    username VARCHAR(30) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    phone_number VARCHAR(15) UNIQUE,
+    password VARCHAR(60) NOT NULL,
     enabled BOOLEAN DEFAULT TRUE,
-    address VARCHAR(500),
-    department VARCHAR(255),
-    company VARCHAR(255),
+    address VARCHAR(150),
+    department VARCHAR(50),
+    company VARCHAR(100),
     bio TEXT,
-    full_name VARCHAR(255),
-    avatar VARCHAR(500),
+    full_name VARCHAR(60),
+    avatar VARCHAR(255),
     permission_level INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -35,14 +35,14 @@ CREATE TABLE IF NOT EXISTS user_roles (
 -- Create leads table
 CREATE TABLE IF NOT EXISTS leads (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(255) NOT NULL,
+    full_name VARCHAR(60) NOT NULL,
     province VARCHAR(50),
-    phone VARCHAR(20) NOT NULL,
-    email VARCHAR(255),
-    company VARCHAR(255),
+    phone VARCHAR(15) NOT NULL,
+    email VARCHAR(100),
+    company VARCHAR(100),
     source VARCHAR(50),
     status VARCHAR(50) NOT NULL DEFAULT 'CHUA_GOI',
-    notes TEXT,
+    notes VARCHAR(500),
     creator_id BIGINT NOT NULL,
     assigned_user_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS lead_status_history (
     new_status VARCHAR(50) NOT NULL,
     changed_by BIGINT NOT NULL,
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT,
+    notes VARCHAR(500),
     FOREIGN KEY (lead_id) REFERENCES leads(id) ON DELETE CASCADE,
     FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -84,3 +84,13 @@ CREATE TABLE IF NOT EXISTS verification_codes (
 CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_type ON verification_codes(type);
+
+-- password_reset_token
+CREATE TABLE IF NOT EXISTS password_reset_token (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(200) NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
