@@ -16,4 +16,5 @@ public class CreateLeadRequest {
     private LeadSource source;
     private String notes;
     private Long assignedUserId; // Có thể null
+    
 }
